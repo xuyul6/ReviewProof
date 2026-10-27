@@ -9,8 +9,9 @@
 
 - 第 1 阶段（数据底座）：从 AmazonQA 抽样 100 件商品（4 个品类），共 22,433 条评论、24,599 个评论块和 767 道评测题，存入 PostgreSQL + pgvector，每个块都有 BGE-M3 向量。
 - 第 2 阶段（混合检索）：给定商品和问题，评论少的商品直接返回全部评论块，其余商品用向量检索和 BM25 两路召回、RRF 融合、BGE 重排，取 8 条证据。任一路出故障时另一路继续，并记录实际用了哪些通道。
+- 第 3 阶段（问答工作流）：LangGraph 把规划、检索、证据评估、必要时改写重检索、带引用生成和引用核验串起来，输出"能回答 / 部分能回答 / 评论无法确认"三态和是非题结论；服务出错时单独说明，不报成"评论无法确认"。生成用 Claude Haiku 5.5。
 
-问答工作流、接口和界面在后续阶段实现。
+接口和界面在后续阶段实现。
 
 ## 本地运行
 
@@ -36,6 +37,13 @@ python -m reviewproof.ingest --manifest samples/manifest_v1.json
 ```bash
 python -m reviewproof.retrieval --qid 17020
 python -m reviewproof.retrieval --product B00007E7C8 --query "Does it have volume control?"
+```
+
+提问（需要在 `.env` 填 `ANTHROPIC_API_KEY`，每题约 3–4 次 Claude Haiku 5.5 调用）：
+
+```bash
+python -m reviewproof.workflow --qid 17020
+python -m reviewproof.workflow --product B00007E7C8 --question "音量可以调节吗？"
 ```
 
 ## 测试
