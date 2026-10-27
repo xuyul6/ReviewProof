@@ -24,13 +24,20 @@ const ask = useAsk(api);
 const running = computed(() => ask.phase.value === "running");
 
 onMounted(async () => {
+  // Health first: only a failed health check means the API itself is unreachable. A failing
+  // product list with a reachable API (e.g. database down) is shown by HealthBanner instead.
   try {
-    const [h, list] = await Promise.all([api.health(), api.products()]);
-    health.value = h;
+    health.value = await api.health();
+  } catch {
+    unreachable.value = true;
+    return;
+  }
+  try {
+    const list = await api.products();
     products.value = list.products;
     source.value = list.source;
   } catch {
-    unreachable.value = true;
+    products.value = [];
   }
 });
 

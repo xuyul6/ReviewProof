@@ -56,6 +56,11 @@ export function useAsk(client: ApiClient) {
             break;
         }
       }
+      // The stream ended without done or error (server restart, dropped proxy connection).
+      if (!current.signal.aborted && phase.value === "running") {
+        errorMessage.value = "连接中断，未收到完整结果";
+        phase.value = "error";
+      }
     } catch (error) {
       if (current.signal.aborted) return;
       errorMessage.value = error instanceof ApiError ? error.detail : String(error);

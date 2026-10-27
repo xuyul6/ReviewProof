@@ -56,6 +56,13 @@ describe("useAsk", () => {
     expect([b.phase.value, b.errorMessage.value]).toEqual(["error", "product not found"]);
   });
 
+  it("a stream that ends without done or error is reported, not left spinning", async () => {
+    const ask = useAsk(clientWith([{ event: "progress", data: { node: "plan", status: "ok", detail: "", latency_ms: 1 } }]));
+    await ask.start("A", "q");
+    expect(ask.phase.value).toBe("error");
+    expect(ask.errorMessage.value).toBe("连接中断，未收到完整结果");
+  });
+
   it("start resets the previous answer", async () => {
     const ask = useAsk(clientWith([{ event: "answer_chunk", data: { text: "old" } }, done("ok", "answered")]));
     await ask.start("A", "q");

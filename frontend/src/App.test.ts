@@ -1,6 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 import App from "./App.vue";
+import { ApiError } from "./api/client";
 import { answeredEvents, fakeApi } from "./testing";
 
 async function mountApp(api = fakeApi()) {
@@ -75,6 +76,15 @@ describe("App", () => {
     const wrapper = await mountApp();
     await wrapper.find('[data-test="question-input"]').setValue("Is it loud?");
     expect(wrapper.find('[data-test="ask-button"]').attributes("disabled")).toBeDefined();
+  });
+
+  it("a database outage shows the database warning, not the start command", async () => {
+    const wrapper = await mountApp(fakeApi({
+      health: async () => ({ database: false, llm_model: "claude-haiku-5-5", anthropic_key_set: true }),
+      products: async () => { throw new ApiError(500, "Internal Server Error"); },
+    }));
+    expect(wrapper.text()).toContain("docker compose up -d db");
+    expect(wrapper.text()).not.toContain("python -m reviewproof.api");
   });
 
   it("picking an example question fills the input", async () => {
