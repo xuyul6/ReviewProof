@@ -135,10 +135,10 @@ def _markdown(metrics: dict) -> str:
     if cl is None:
         out.append("本次未运行。")
     else:
-        out += ["| 系统 | n | 总成本 (USD) | 每题成本 | P50 延迟 (s) | P95 延迟 (s) | 平均 LLM 调用 | 降级率 | 越界引用 |",
-                "|---|---|---|---|---|---|---|---|---|"]
         if "b1_full_context" in cl:
             out += [B1_SCOPE_NOTE, ""]
+        out += ["| 系统 | n | 总成本 (USD) | 每题成本 | P50 延迟 (s) | P95 延迟 (s) | 平均 LLM 调用 | 降级率 | 越界引用 |",
+                "|---|---|---|---|---|---|---|---|---|"]
         for system, m in cl.items():
             fmt = lambda v, d=3: "—" if v is None else f"{v:.{d}f}"  # noqa: E731
             out.append(f"| {SYSTEM_LABELS.get(system, system)} | {m['n']} | {fmt(m['cost_usd_total'], 4)} | "

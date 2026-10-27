@@ -77,6 +77,7 @@ class EvalCliTests(DatabaseTestCase):
         for key in ("git_commit", "dataset_id", "source_sha256", "embedding_model", "rerank_model", "llm_model",
                     "retrieval_params", "max_rewrites", "seed", "sample", "split", "started_at"):
             self.assertIn(key, config)
+        self.assertNotIn("approximate", config["cost_note"])  # each call is priced at its own tier
         retrieval = [json.loads(l) for l in (out / "retrieval.jsonl").read_text().splitlines()]
         self.assertEqual({r["qid"]: r["exclude_reason"] for r in retrieval},
                          {"qa": "full_context", "qc": None, "qn": "silver_unanswerable"})

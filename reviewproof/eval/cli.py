@@ -92,7 +92,7 @@ def main(
             "llm_model": getattr(llm, "model_name", None), "retrieval_params": dataclasses.asdict(deps.params),
             "max_rewrites": settings.max_rewrites, "seed": args.seed, "questions_in_split": len(questions),
             "sample": len(sample), "systems": list(systems) if sample else [],
-            "cost_note": "Claude Haiku 5.5 prices as of 2026-10-27; tier chosen from average input per call (approximate)",
+            "cost_note": "Claude Haiku 5.5 prices as of 2026-10-27; each call priced at its own tier (over 100k input tokens is long-context)",
         }
         (out_dir / "config.json").write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
 

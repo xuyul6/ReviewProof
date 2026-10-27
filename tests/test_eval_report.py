@@ -117,6 +117,10 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(saved["answerability"]["workflow"]["n"], len(ROWS) + 1)
         self.assertIn("完整工作流（与 B1 同题）", md)
         self.assertIn("B1 只在混合检索商品的题上运行", md)
+        lines = md.splitlines()
+        for header in ("| 系统 | 计入/总数", "| 系统 | n | 总成本"):
+            i = next(n for n, line in enumerate(lines) if line.startswith(header))
+            self.assertTrue(all(line.startswith("|") for line in lines[i:i + 3]), header)  # table not split by the note
 
     def test_recall_ceiling_noted_next_to_retrieval_table(self):
         _, md, saved = self.build(None)
