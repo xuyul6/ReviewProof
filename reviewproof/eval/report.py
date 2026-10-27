@@ -11,7 +11,10 @@ from reviewproof.eval.metrics import answerability_metrics, bootstrap_ci, paired
 from reviewproof.eval.retrieval_eval import VARIANTS
 
 RETRIEVAL_METRICS = ("recall@5", "recall@10", "recall@20", "recall@40", "hit@5", "mrr@10", "ndcg@5")
-SYSTEM_LABELS = {"workflow": "完整工作流", "b0_no_evidence": "B0 不给证据", "b1_full_context": "B1 全量上下文"}
+SYSTEM_LABELS = {"workflow": "完整工作流", "b0_no_evidence": "B0 不给证据", "b1_full_context": "B1 全量上下文",
+                 "workflow_b1_qids": "完整工作流（与 B1 同题）"}
+B1_SCOPE_NOTE = ("B1 只在混合检索商品的题上运行（全量上下文商品上它与工作流相同），所以和 B1 比较时请看"
+                 "\"完整工作流（与 B1 同题）\"一行，它只统计 B1 也跑了的题。")
 
 CAVEATS = """- **可答性银标**是 AmazonQA 分类器基于每题 10 个 BM25 片段做的判断，不是人工金标。换成完整评论后，部分"不可答"的题其实可答，所以对照银标的"误答"会被高估。
 - **检索参考证据**是把 AmazonQA 为每题挑出的 10 个 BM25 片段对齐到评论块得到的，不代表这些块真的相关。检索分数衡量的是与 AmazonQA 的 BM25 结果的一致程度，天然偏向 BM25，不是人工金标。
@@ -62,7 +65,8 @@ def _retrieval_summary(rows: Sequence[dict]) -> dict:
     for cat in sorted({r["category"] for r in included}):
         by_category[cat] = {v: _interval([r[v]["hit@5"] for r in included if r["category"] == cat and r.get(v)])
                             for v in VARIANTS}
-    return {"n_total": len(rows), "n_included": len(included), "excluded": excluded,
+    mean_relevant = statistics.fmean(r["n_relevant"] for r in included) if included else None
+    return {"n_total": len(rows), "n_included": len(included), "excluded": excluded, "mean_relevant": mean_relevant,
             "errors": {v: sum(1 for r in included if r.get(v) is None) for v in VARIANTS},
             "variants": variants, "hybrid_rerank_minus": diffs, "hit@5_by_category": by_category}
 
@@ -103,6 +107,9 @@ def _markdown(metrics: dict) -> str:
         for v in VARIANTS:
             row = ret["variants"][v]
             out.append(f"| {v} | {row['n']} | " + " | ".join(_ci(row[m]) for m in RETRIEVAL_METRICS) + " |")
+        if ret["mean_relevant"]:
+            out += ["", f"每题平均有 {ret['mean_relevant']:.1f} 个参考证据块，所以 Recall@5 的上限约为 "
+                        f"{min(1.0, 5 / ret['mean_relevant']):.2f}，不要把接近这个值的分数读成检索偏弱。"]
         out += ["", "hybrid_rerank 减去其他方案（配对差值）：", "", "| 对比 | hit@5 | ndcg@5 |", "|---|---|---|"]
         for other, d in ret["hybrid_rerank_minus"].items():
             out.append(f"| hybrid_rerank − {other} | {_ci(d['hit@5'])} | {_ci(d['ndcg@5'])} |")
@@ -115,6 +122,8 @@ def _markdown(metrics: dict) -> str:
         out.append("本次未运行。")
     else:
         out.append("\"答了\" = answered 或 partial；\"拒答\" = unanswerable 或不在服务范围。服务故障不进入分母，单独计数。")
+        if "b1_full_context" in ans:
+            out += ["", B1_SCOPE_NOTE]
         out += ["", "| 系统 | 计入/总数 | 服务故障 | 正确拒答率 | 误拒率 | 答复 F1 | 准确率 | 三态分布 | 服务故障被报成无法确认 |",
                 "|---|---|---|---|---|---|---|---|---|"]
         for system, m in ans.items():
@@ -128,6 +137,8 @@ def _markdown(metrics: dict) -> str:
     else:
         out += ["| 系统 | n | 总成本 (USD) | 每题成本 | P50 延迟 (s) | P95 延迟 (s) | 平均 LLM 调用 | 降级率 | 越界引用 |",
                 "|---|---|---|---|---|---|---|---|---|"]
+        if "b1_full_context" in cl:
+            out += [B1_SCOPE_NOTE, ""]
         for system, m in cl.items():
             fmt = lambda v, d=3: "—" if v is None else f"{v:.{d}f}"  # noqa: E731
             out.append(f"| {SYSTEM_LABELS.get(system, system)} | {m['n']} | {fmt(m['cost_usd_total'], 4)} | "
@@ -135,7 +146,7 @@ def _markdown(metrics: dict) -> str:
                        f"{fmt(m['latency_ms_p95'] and m['latency_ms_p95'] / 1000, 1)} | {fmt(m['llm_calls_mean'], 1)} | "
                        f"{fmt(m['degraded_rate'])} | {m['citation_out_of_product']} |")
         out.append("")
-        out.append("成本按 Claude Haiku 5.5 价格（2026-10-27）估算，每题按平均每次调用的输入量选价格档，是近似值。")
+        out.append("成本按 Claude Haiku 5.5 价格（2026-10-27）计算，每次调用按它自己的输入量选价格档（超过 10 万 token 为长上下文价格）。")
     out += ["", "## 5. 失败案例", ""]
     fc = metrics["failure_cases"]
     if fc is None:
@@ -160,6 +171,9 @@ def build_report(*, retrieval_rows: Sequence[dict] | None, workflow_rows: Sequen
     by_system: dict[str, list[dict]] = {}
     for r in workflow_rows or []:
         by_system.setdefault(r["system"], []).append(r)
+    if "b1_full_context" in by_system and "workflow" in by_system:
+        b1_qids = {r["qid"] for r in by_system["b1_full_context"]}
+        by_system["workflow_b1_qids"] = [r for r in by_system["workflow"] if r["qid"] in b1_qids]
     metrics = {
         "config": config,
         "retrieval": _retrieval_summary(retrieval_rows) if retrieval_rows else None,

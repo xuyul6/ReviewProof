@@ -110,6 +110,15 @@ class WorkflowEvalTests(DatabaseTestCase):
         self.assertEqual(rows[0]["marker"], "original")
         self.assertIsNone(rows[1]["error"])
 
+    def test_resume_retries_service_failures(self):
+        self.run_eval(FakeLLM(script(EvidenceAssessment=[LLMError("rate limited")])), systems=("workflow",),
+                      questions=[QUESTIONS[0]])
+        self.assertEqual(self.file_rows()[0]["service_status"], "failed")
+        self.run_eval(FakeLLM(script(n=1)), systems=("workflow",), questions=[QUESTIONS[0]])
+        rows = self.file_rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual((rows[0]["service_status"], rows[0]["status"]), ("ok", "answered"))
+
     def test_service_failure_row(self):
         rows = self.run_eval(FakeLLM(script(EvidenceAssessment=[LLMError("down")])), systems=("workflow",),
                              questions=[QUESTIONS[0]])
@@ -139,10 +148,17 @@ class WorkflowEvalTests(DatabaseTestCase):
             for secret in ("SECRET-SNIPPET", "SECRET-ANSWER"):
                 self.assertNotIn(secret, system + prompt)
 
-    def test_cost_uses_haiku_prices(self):
-        self.assertAlmostEqual(cost_usd(1_000_000, 0, 20), 0.10)
-        self.assertAlmostEqual(cost_usd(200_000, 1_000_000, 1), 0.10 + 2.50)
-        self.assertEqual(cost_usd(0, 0, 0), 0.0)
+    def test_cost_prices_each_call_at_its_own_tier(self):
+        self.assertAlmostEqual(cost_usd([(100_000, 0)] * 10), 0.10)
+        self.assertAlmostEqual(cost_usd([(200_000, 1_000_000)]), 0.10 + 2.50)
+        # a short plan call next to a long assess call: the long call is still long-tier
+        self.assertAlmostEqual(cost_usd([(500, 0), (150_000, 0)]), (500 * 0.10 + 150_000 * 0.50) / 1_000_000)
+        self.assertEqual(cost_usd([]), 0.0)
+
+    def test_row_cost_comes_from_per_call_usage(self):
+        rows = self.run_eval(FakeLLM(script()), systems=("workflow",), questions=[QUESTIONS[0]])
+        self.assertEqual(len(rows[0]["usage"]), rows[0]["llm_calls"])
+        self.assertAlmostEqual(rows[0]["cost_usd"], cost_usd([tuple(u) for u in rows[0]["usage"]]))
 
 
 if __name__ == "__main__":

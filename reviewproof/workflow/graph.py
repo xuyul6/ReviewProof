@@ -39,6 +39,7 @@ class QAResult:
     output_tokens: int
     latency_ms: float
     retrievals: tuple[RetrievalSnapshot, ...] = ()
+    usage: tuple[tuple[int, int], ...] = ()  # (input, output) tokens per LLM call
 
 
 def build_graph(nodes: WorkflowNodes):
@@ -90,7 +91,7 @@ def stream_answer(conn: psycopg.Connection, product_id: str, question: str, *, l
         trace=tuple(state.get("trace", ())), llm_calls=len(usage),
         input_tokens=sum(u[0] for u in usage), output_tokens=sum(u[1] for u in usage),
         latency_ms=(time.perf_counter() - start) * 1000,
-        retrievals=tuple(state.get("retrieval_snapshots", ())))
+        retrievals=tuple(state.get("retrieval_snapshots", ())), usage=tuple(tuple(u) for u in usage))
 
 
 def answer_question(conn: psycopg.Connection, product_id: str, question: str, *, llm: LLM,

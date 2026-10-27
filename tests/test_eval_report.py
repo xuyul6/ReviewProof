@@ -107,6 +107,22 @@ class ReportTests(unittest.TestCase):
         self.assertIn("fr", md)  # a false refusal is listed as a failure case
         self.assertEqual(metrics, saved)
 
+    def test_workflow_compared_with_b1_on_the_same_questions(self):
+        fc = dict(wf("fc", True, True), strategy="full_context")
+        b1 = [wf("t0", True, False, system="b1_full_context"), wf("fr", True, False, system="b1_full_context")]
+        _, md, saved = self.build(ROWS + [fc] + b1)
+        matched = saved["answerability"]["workflow_b1_qids"]
+        self.assertEqual(matched["n"], 2)  # only t0 and fr, not the full-context question
+        self.assertEqual(saved["cost_latency"]["workflow_b1_qids"]["n"], 2)
+        self.assertEqual(saved["answerability"]["workflow"]["n"], len(ROWS) + 1)
+        self.assertIn("完整工作流（与 B1 同题）", md)
+        self.assertIn("B1 只在混合检索商品的题上运行", md)
+
+    def test_recall_ceiling_noted_next_to_retrieval_table(self):
+        _, md, saved = self.build(None)
+        self.assertAlmostEqual(saved["retrieval"]["mean_relevant"], 10.0)
+        self.assertIn("Recall@5 的上限约为 0.50", md)
+
     def test_report_without_workflow_rows(self):
         _, md, saved = self.build(None)
         self.assertIn("本次未运行", md)

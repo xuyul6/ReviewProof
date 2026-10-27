@@ -25,24 +25,32 @@ PRICE_LONG = (0.50, 2.50)   # prompts over 100k tokens
 LONG_PROMPT_TOKENS = 100_000
 
 
-def cost_usd(input_tokens: int, output_tokens: int, llm_calls: int) -> float:
-    """Approximate: per-call input size is unknown, so the tier is chosen from the average per call."""
-    if llm_calls <= 0:
-        return 0.0
-    rate_in, rate_out = PRICE_LONG if input_tokens / llm_calls > LONG_PROMPT_TOKENS else PRICE_SHORT
-    return (input_tokens * rate_in + output_tokens * rate_out) / 1_000_000
+def cost_usd(calls: Sequence[tuple[int, int]]) -> float:
+    """Each (input, output) call is priced at the tier its own prompt size falls in."""
+    total = 0.0
+    for input_tokens, output_tokens in calls:
+        rate_in, rate_out = PRICE_LONG if input_tokens > LONG_PROMPT_TOKENS else PRICE_SHORT
+        total += input_tokens * rate_in + output_tokens * rate_out
+    return total / 1_000_000
+
+
+def _finished(row: dict) -> bool:
+    return row.get("service_status") != "failed" and not row.get("error")
 
 
 def _read_done(out_path: Path) -> list[dict]:
-    """Complete rows already written; a half-written last line (interrupted run) is dropped."""
+    """Rows already finished. A half-written last line (interrupted run) and rows that ended in a
+    service failure or error (e.g. rate limits) are dropped, so rerunning the command retries them."""
     if not out_path.exists():
         return []
     rows = []
     for line in out_path.read_text(encoding="utf-8").splitlines():
         try:
-            rows.append(json.loads(line))
+            row = json.loads(line)
         except json.JSONDecodeError:
             continue
+        if _finished(row):
+            rows.append(row)
     out_path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
     return rows
 
@@ -52,7 +60,7 @@ def _base_row(q: EvalQuestion, system: str) -> dict:
             "question_type": q.question_type, "strategy": q.strategy, "answerable_silver": q.answerable_silver,
             "status": None, "service_status": "failed", "route": None, "verdict": None, "answered_binary": None,
             "n_citations": 0, "citation_out_of_product": 0, "llm_calls": 0, "input_tokens": 0, "output_tokens": 0,
-            "cost_usd": 0.0, "latency_ms": 0.0, "rewrites_used": 0, "retrieval_modes": [], "answer_text": "",
+            "usage": [], "cost_usd": 0.0, "latency_ms": 0.0, "rewrites_used": 0, "retrieval_modes": [], "answer_text": "",
             "error": None}
 
 
@@ -68,7 +76,8 @@ def _run_one(conn, q: EvalQuestion, system: str, llm: LLM, deps: RetrievalDeps, 
             else:
                 row.update(service_status="ok", status="answered" if result.output.answered else "unanswerable",
                            answered_binary=result.output.answered, llm_calls=1, input_tokens=result.input_tokens,
-                           output_tokens=result.output_tokens, answer_text=result.output.answer)
+                           output_tokens=result.output_tokens, usage=[[result.input_tokens, result.output_tokens]],
+                           answer_text=result.output.answer)
         else:
             run_deps = deps if system == "workflow" else dataclasses.replace(
                 deps, params=dataclasses.replace(deps.params, full_context_max_tokens=10**9))
@@ -80,13 +89,13 @@ def _run_one(conn, q: EvalQuestion, system: str, llm: LLM, deps: RetrievalDeps, 
                        n_citations=len(r.citations),
                        citation_out_of_product=sum(not c.chunk_id.startswith(f"{q.product_id}-r") for c in r.citations),
                        llm_calls=r.llm_calls, input_tokens=r.input_tokens, output_tokens=r.output_tokens,
-                       rewrites_used=r.rewrites_used, retrieval_modes=list(r.retrieval_modes),
+                       usage=[list(u) for u in r.usage], rewrites_used=r.rewrites_used, retrieval_modes=list(r.retrieval_modes),
                        answer_text=r.answer_text)
     except Exception as exc:  # keep going: one broken question must not stop the evaluation
         conn.rollback()
         row["error"] = f"{type(exc).__name__}: {exc}"
     row["latency_ms"] = (time.perf_counter() - start) * 1000
-    row["cost_usd"] = cost_usd(row["input_tokens"], row["output_tokens"], row["llm_calls"])
+    row["cost_usd"] = cost_usd(row["usage"])
     return row
 
 
