@@ -13,7 +13,7 @@ export class ApiError extends Error {
   }
 }
 
-async function toApiError(response: Response): Promise<ApiError> {
+export async function toApiError(response: Response): Promise<ApiError> {
   let detail = response.statusText || `HTTP ${response.status}`;
   try {
     const body = await response.json();

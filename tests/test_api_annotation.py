@@ -94,6 +94,14 @@ class AnnotationApiTests(DatabaseTestCase):
             for secret in ("SECRET-SNIPPET", "is_answerable", "silver"):
                 self.assertNotIn(secret, text)
 
+    def test_item_includes_text_of_graded_out_of_pool_chunks(self):
+        save_label(self.conn, "gold_v1", Label("qa", "draft", "answered", "yes", dict(DRAFT_GRADES, **{"A-r00002-c00": 1}),
+                                               "r", "agent:test"))
+        body = self.client.get(f"{self.base}/items/qa").json()
+        self.assertEqual(body["extra_chunks"], [{"chunk_id": "A-r00002-c00", "review_id": "A-r00002",
+                                                 "text": "Fits the 4th gen iPad."}])
+        self.assertEqual(self.client.get(f"{self.base}/items/qd").json()["extra_chunks"], [])
+
     def test_search_returns_out_of_pool_chunks(self):
         body = self.client.get(f"{self.base}/items/qa/search", params={"q": "ipad"}).json()
         self.assertEqual([c["chunk_id"] for c in body["chunks"]], ["A-r00002-c00"])

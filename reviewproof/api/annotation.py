@@ -38,9 +38,16 @@ def annotation_router(svc: Callable) -> APIRouter:
         hidden = item["blind"] and "blind" not in item["labels"]
         if hidden:
             item["labels"].pop("draft", None)
+        pool = {c["chunk_id"] for c in item["pool"]}
+        # Out-of-pool chunks someone graded (found by search); computed after hiding the draft, so a
+        # blind item does not reveal which chunks the agent picked.
+        extra_ids = sorted({cid for lab in item["labels"].values() for cid in lab["grades"]} - pool)
+        extra = conn.execute("SELECT chunk_id, review_id, text FROM chunks WHERE chunk_id = ANY(%s) ORDER BY chunk_id",
+                             (extra_ids,)).fetchall()
         answers = conn.execute("SELECT answers FROM questions WHERE qid = %s", (qid,)).fetchone()[0]
         conn.rollback()
         return {**item, "draft_hidden": hidden,
+                "extra_chunks": [{"chunk_id": c, "review_id": r, "text": t} for c, r, t in extra],
                 "community_answers": [a.get("answerText", "") for a in answers if isinstance(a, dict)]}
 
     def save(conn, label_set: str, label: Label) -> dict:
