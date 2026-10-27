@@ -127,6 +127,34 @@ class ReportTests(unittest.TestCase):
         self.assertAlmostEqual(saved["retrieval"]["mean_relevant"], 10.0)
         self.assertIn("Recall@5 的上限约为 0.50", md)
 
+    def test_gold_report_has_b2_confusion_agreement_and_gold_caveats(self):
+        def gold(r, ans, verdict=None, tokens=30_000):
+            return dict(r, answerability_gold=ans, answerable_gold=ans != "unanswerable", verdict_gold=verdict,
+                        product_tokens=tokens)
+        rows = [gold(wf("g1", True, True), "answered", "yes"), gold(wf("g2", False, False), "unanswerable"),
+                gold(wf("g3", True, False), "partial", tokens=90_000),
+                gold(wf("g1", True, True, system="b1_full_context"), "answered", "yes"),
+                gold(wf("g3", True, True, system="b1_full_context"), "partial", tokens=90_000)]
+        rows[0]["verdict"] = "yes"
+        agreement = {"gold_vs_silver": {"kappa": 0.5, "agreement": 0.8, "n": 3},
+                     "draft_vs_final": {"kappa": 0.9, "changed_share": 0.1, "n": 3},
+                     "blind_vs_draft": {"kappa": None, "agreement": 1.0, "n": 1}}
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        metrics = build_report(retrieval_rows=None, workflow_rows=rows, config={"name": "gold"},
+                               out_dir=Path(tmp.name), labels="gold", agreement=agreement)
+        md = (Path(tmp.name) / "report.md").read_text(encoding="utf-8")
+        b2 = metrics["answerability"]["b2_amazonqa_classifier"]
+        self.assertEqual((b2["n"], b2["accuracy"]["mean"]), (3, 1.0))  # silver happens to match gold here
+        self.assertEqual(metrics["three_state"]["workflow"]["confusion"]["partial"]["unanswerable"], 1)
+        self.assertEqual(metrics["verdict_accuracy"]["workflow"]["n"], 1)
+        self.assertEqual([b["band"] for b in metrics["token_bands"]], ["20k–60k", ">60k"])
+        for phrase in ("人工逐题审核", "B2 AmazonQA 自带分类器", "三态混淆矩阵", "一致率", "是非题结论", "按评论量分段",
+                       "不是两位人工"):
+            self.assertIn(phrase, md)
+        self.assertNotIn("AmazonQA 分类器基于每题 10 个 BM25 片段做的判断，不是人工金标", md)
+        self.assertNotIn("b2_amazonqa_classifier", metrics["cost_latency"])
+
     def test_report_without_workflow_rows(self):
         _, md, saved = self.build(None)
         self.assertIn("本次未运行", md)
