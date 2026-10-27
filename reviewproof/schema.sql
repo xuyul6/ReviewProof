@@ -29,3 +29,10 @@ CREATE TABLE IF NOT EXISTS questions (
   question_text TEXT NOT NULL, question_type TEXT NOT NULL,
   is_answerable_silver BOOLEAN NOT NULL, answers JSONB NOT NULL, review_snippets JSONB NOT NULL);
 CREATE INDEX IF NOT EXISTS questions_product_idx ON questions (product_id);
+
+CREATE TABLE IF NOT EXISTS qa_runs (
+  run_id TEXT PRIMARY KEY, product_id TEXT NOT NULL REFERENCES products,
+  question TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  route TEXT NOT NULL, status TEXT, service_status TEXT NOT NULL, verdict TEXT,
+  llm_model TEXT NOT NULL, latency_ms DOUBLE PRECISION NOT NULL, result JSONB NOT NULL);
+CREATE INDEX IF NOT EXISTS qa_runs_product_idx ON qa_runs (product_id, created_at DESC);

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from typing import Iterator
 
 import psycopg
 from langgraph.graph import END, START, StateGraph
@@ -54,8 +55,10 @@ def build_graph(nodes: WorkflowNodes):
     return graph.compile()
 
 
-def answer_question(conn: psycopg.Connection, product_id: str, question: str, *, llm: LLM,
-                    retrieval: RetrievalDeps, max_rewrites: int = 1) -> QAResult:
+def stream_answer(conn: psycopg.Connection, product_id: str, question: str, *, llm: LLM,
+                  retrieval: RetrievalDeps, max_rewrites: int = 1) -> Iterator[TraceEntry | QAResult]:
+    """Yield each node's trace entry as it finishes, then the QAResult. Input is checked on the
+    first next(): an empty question raises ValueError, an unknown product ProductNotFoundError."""
     if not question.strip():
         raise ValueError("question is empty")
     exists = conn.execute("SELECT 1 FROM products WHERE product_id = %s", (product_id,)).fetchone()
@@ -64,12 +67,20 @@ def answer_question(conn: psycopg.Connection, product_id: str, question: str, *,
         raise ProductNotFoundError(product_id)
 
     start = time.perf_counter()
-    state = build_graph(WorkflowNodes(conn, llm, retrieval, max_rewrites)).invoke(
-        {"product_id": product_id, "question": question, "rewrites_used": 0})
+    graph = build_graph(WorkflowNodes(conn, llm, retrieval, max_rewrites))
+    state: dict = {}
+    initial = {"product_id": product_id, "question": question, "rewrites_used": 0}
+    for mode, chunk in graph.stream(initial, stream_mode=["updates", "values"]):
+        if mode == "values":
+            state = chunk
+            continue
+        for update in chunk.values():
+            yield from (update or {}).get("trace", [])
+
     usage = state.get("usage", [])
     service_status = ("failed" if state.get("service_failed")
                       else "degraded" if state.get("degraded") else "ok")
-    return QAResult(
+    yield QAResult(
         product_id=product_id, question=question, route=state.get("route", "review_question"),
         status=state["status"], service_status=service_status, verdict=state["verdict"],
         claims=tuple(state["claims"]), unknowns=tuple(state["unknowns"]), citations=tuple(state["citations"]),
@@ -78,3 +89,9 @@ def answer_question(conn: psycopg.Connection, product_id: str, question: str, *,
         trace=tuple(state.get("trace", ())), llm_calls=len(usage),
         input_tokens=sum(u[0] for u in usage), output_tokens=sum(u[1] for u in usage),
         latency_ms=(time.perf_counter() - start) * 1000)
+
+
+def answer_question(conn: psycopg.Connection, product_id: str, question: str, *, llm: LLM,
+                    retrieval: RetrievalDeps, max_rewrites: int = 1) -> QAResult:
+    *_, result = stream_answer(conn, product_id, question, llm=llm, retrieval=retrieval, max_rewrites=max_rewrites)
+    return result

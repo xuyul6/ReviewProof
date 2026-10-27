@@ -1,4 +1,4 @@
-from reviewproof.workflow.graph import QAResult, answer_question
+from reviewproof.workflow.graph import QAResult, answer_question, stream_answer
 from reviewproof.workflow.state import RetrievalDeps
 
-__all__ = ["QAResult", "RetrievalDeps", "answer_question"]
+__all__ = ["QAResult", "RetrievalDeps", "answer_question", "stream_answer"]

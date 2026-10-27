@@ -10,7 +10,8 @@ from reviewproof.ingest.loader import load_dataset
 from reviewproof.llm import LLMError
 from reviewproof.retrieval import ProductNotFoundError, RetrievalParams
 from reviewproof.retrieval.bm25 import BM25Cache
-from reviewproof.workflow import RetrievalDeps, answer_question
+from reviewproof.workflow import QAResult, RetrievalDeps, answer_question, stream_answer
+from reviewproof.workflow.state import TraceEntry
 from reviewproof.workflow import nodes as workflow_nodes
 from reviewproof.workflow.schemas import Claim, EvidenceAssessment, GeneratedAnswer, QueryPlan
 from tests.support import DatabaseTestCase, FakeEmbedder, FakeLLM, FakeReranker, make_manifest, make_product
@@ -282,6 +283,21 @@ class WorkflowTests(DatabaseTestCase):
             r = self.ask({"QueryPlan": [plan("loud")]})
         self.assertEqual((r.status, r.service_status), (None, "failed"))
         self.assertIn("OperationalError", r.trace[-1].detail)
+
+    def test_stream_yields_trace_then_result(self):
+        llm = FakeLLM({"QueryPlan": [plan("loud")], "EvidenceAssessment": [assess("answered", ["A-r00001-c00"])],
+                       "GeneratedAnswer": [generated(LOUD)]})
+        items = list(stream_answer(self.conn, "A", "Is it loud?", llm=llm, retrieval=self.deps))
+        entries, result = items[:-1], items[-1]
+        self.assertTrue(all(isinstance(e, TraceEntry) for e in entries))
+        self.assertEqual([e.node for e in entries], ["plan", "retrieve", "assess", "generate", "verify"])
+        self.assertIsInstance(result, QAResult)
+        self.assertEqual((result.status, result.trace), ("answered", tuple(entries)))
+
+    def test_stream_validates_on_first_next(self):
+        gen = stream_answer(self.conn, "ZZZ", "Is it loud?", llm=FakeLLM({}), retrieval=self.deps)
+        with self.assertRaises(ProductNotFoundError):
+            next(gen)
 
     def test_bad_input(self):
         with self.assertRaises(ValueError):
