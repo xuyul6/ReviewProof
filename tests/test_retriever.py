@@ -94,6 +94,12 @@ class RetrieveTests(DatabaseTestCase):
         r = self.run_retrieve(query="声音大吗？", embedder=FakeEmbedder(fail_queries=True))
         self.assertEqual((r.mode, r.service_status, r.candidates), ("none", "failed", ()))
 
+    def test_failed_channel_and_empty_pool_is_service_failure(self):
+        # BM25 runs fine but finds nothing; with dense down, that emptiness comes from the outage.
+        r = self.run_retrieve(query="waterproof", embedder=FakeEmbedder(fail_queries=True))
+        self.assertEqual((self.status(r, "bm25").status, self.status(r, "bm25").hits), ("ok", 0))
+        self.assertEqual((r.mode, r.service_status, r.candidates), ("none", "failed", ()))
+
     def test_reranker_failure_falls_back_to_rrf_order(self):
         r = self.run_retrieve(reranker=FakeReranker(fail=True))
         self.assertEqual((r.mode, r.service_status), ("dense+bm25", "degraded"))

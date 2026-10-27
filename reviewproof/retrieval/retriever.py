@@ -108,13 +108,13 @@ def _hybrid(
             candidates = pool[: params.evidence_k]
 
     recall = [c for c in channels if c.name in RECALL_CHANNELS]
-    if not any(c.status == "ok" for c in recall) and any(c.status == "failed" for c in recall):
-        service_status = "failed"
-    elif any(c.status == "failed" for c in channels):
-        service_status = "degraded"
+    recall_failed = any(c.status == "failed" for c in recall)
+    # With a recall channel down, an empty pool says nothing about the reviews: report the outage.
+    if recall_failed and (not pool or not any(c.status == "ok" for c in recall)):
+        service_status, mode, candidates = "failed", "none", ()
     else:
-        service_status = "ok"
-    mode = "+".join(c.name for c in channels if c.status == "ok") if any(c.status == "ok" for c in recall) else "none"
+        service_status = "degraded" if any(c.status == "failed" for c in channels) else "ok"
+        mode = "+".join(c.name for c in channels if c.status == "ok")
     return RetrievalResult(product_id, query, "hybrid", mode, service_status, pool, candidates, tuple(channels))
 
 

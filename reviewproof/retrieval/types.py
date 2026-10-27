@@ -54,7 +54,8 @@ class RetrievalResult:
     query: str
     strategy: str  # "full_context" | "hybrid"
     mode: str  # channels that succeeded, e.g. "dense+bm25+rerank"; "full_context"; "none" if no channel did
-    service_status: str  # "ok" | "degraded" | "failed"; "failed" means nothing was searched, not "no evidence"
-    pool: tuple[Candidate, ...]  # fused, before reranking (top rerank_pool), for Recall@K
+    # "failed": a recall channel failed and nothing usable came back; never read it as "no evidence"
+    service_status: str  # "ok" | "degraded" | "failed"
+    pool: tuple[Candidate, ...]  # top rerank_pool in RRF order (carrying rerank_score if reranked), for Recall@K
     candidates: tuple[Candidate, ...]  # final evidence, at most evidence_k
     channels: tuple[ChannelStatus, ...]
