@@ -20,6 +20,8 @@ class Settings:
     llm_model: str = "claude-haiku-5-5"
     llm_effort: str = "low"
     max_rewrites: int = 1
+    annotation_enabled: bool = False  # REVIEWPROOF_ANNOTATION=1 registers the local annotation review API
+    annotator: str = "human"
 
 
 def _int(env: Mapping[str, str], name: str, default: int) -> int:
@@ -58,4 +60,6 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         llm_model=env.get("REVIEWPROOF_LLM_MODEL", "").strip() or "claude-haiku-5-5",
         llm_effort=llm_effort,
         max_rewrites=max_rewrites,
+        annotation_enabled=env.get("REVIEWPROOF_ANNOTATION", "").strip().lower() in ("1", "true", "yes"),
+        annotator=env.get("REVIEWPROOF_ANNOTATOR", "").strip() or "human",
     )
