@@ -54,8 +54,10 @@ def make_manifest(*product_ids: str) -> dict:
 class FakeEmbedder:
     """Deterministic unit vectors seeded by each text's SHA-256; can fail on the Nth batch."""
 
-    def __init__(self, model_name: str = "fake", dim: int = EMBEDDING_DIM, fail_on_call: int | None = None):
+    def __init__(self, model_name: str = "fake", dim: int = EMBEDDING_DIM, fail_on_call: int | None = None,
+                 fail_queries: bool = False):
         self.model_name = model_name
+        self.fail_queries = fail_queries
         self.dim = dim
         self.fail_on_call = fail_on_call
         self.calls = 0
@@ -67,6 +69,8 @@ class FakeEmbedder:
         return [self._vector(t) for t in texts]
 
     def embed_query(self, text: str) -> list[float]:
+        if self.fail_queries:
+            raise RuntimeError("FakeEmbedder failing on queries")
         return self._vector(text)
 
     def _vector(self, text: str) -> list[float]:
