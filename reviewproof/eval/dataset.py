@@ -37,13 +37,14 @@ def load_questions(conn: psycopg.Connection, split: str, full_context_max_tokens
     ]
 
 
-def sample_questions(questions: Sequence[EvalQuestion], n: int, seed: int) -> list[EvalQuestion]:
-    """Stratified by (category, silver label): proportional, at least one per stratum, sorted by qid."""
+def sample_questions(questions: Sequence[EvalQuestion], n: int, seed: int,
+                     by: Sequence[str] = ("category", "answerable_silver")) -> list[EvalQuestion]:
+    """Stratified by the `by` fields: proportional, at least one per stratum, sorted by qid."""
     if n >= len(questions):
         return sorted(questions, key=lambda q: q.qid)
     strata: dict[tuple, list[EvalQuestion]] = defaultdict(list)
     for q in sorted(questions, key=lambda q: q.qid):
-        strata[(q.category, q.answerable_silver)].append(q)
+        strata[tuple(getattr(q, f) for f in by)].append(q)
     keys = sorted(strata)
     total = len(questions)
     exact = {k: n * len(strata[k]) / total for k in keys}
@@ -57,7 +58,7 @@ def sample_questions(questions: Sequence[EvalQuestion], n: int, seed: int) -> li
         if quota[k] < len(strata[k]):
             quota[k] += 1
     picked = []
-    for category, answerable in keys:
-        rng = random.Random(f"{seed}:{category}:{answerable}")
-        picked += rng.sample(strata[(category, answerable)], quota[(category, answerable)])
+    for key in keys:
+        rng = random.Random(":".join([str(seed), *map(str, key)]))
+        picked += rng.sample(strata[key], quota[key])
     return sorted(picked, key=lambda q: q.qid)
