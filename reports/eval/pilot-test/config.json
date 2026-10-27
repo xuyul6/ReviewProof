@@ -1,0 +1,28 @@
+{
+  "name": "pilot-test",
+  "split": "test",
+  "started_at": "2026-10-27T13:41:30+00:00",
+  "git_commit": "74094f18603505e6b09d76900d850ac90e90febd",
+  "dataset_id": "amazonqa-val-v1",
+  "source_sha256": "866095e6cce9abe5bc142e0ff1326737d57b5f24b19670123c6006d618bd941f",
+  "embedding_model": "BAAI/bge-m3",
+  "rerank_model": "BAAI/bge-reranker-v2-m3",
+  "llm_model": "claude-haiku-5-5",
+  "retrieval_params": {
+    "rrf_k": 60,
+    "channel_top_k": 50,
+    "rerank_pool": 40,
+    "evidence_k": 8,
+    "full_context_max_tokens": 6000
+  },
+  "max_rewrites": 1,
+  "seed": 20261027,
+  "questions_in_split": 528,
+  "sample": 50,
+  "systems": [
+    "workflow",
+    "b0_no_evidence",
+    "b1_full_context"
+  ],
+  "cost_note": "Claude Haiku 5.5 prices as of 2026-10-27; each call priced at its own tier (over 100k input tokens is long-context)"
+}

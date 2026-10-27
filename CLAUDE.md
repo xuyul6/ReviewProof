@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-ReviewProof (GitHub `xuyul6/ReviewProof`): pre-purchase, single-product review QA on AmazonQA data, with answerability (answered / partial / unanswerable) as the core metric. Built phase by phase per `docs/roadmap_cn.md`; phases 1 (data foundation), 2 (hybrid retrieval), 3 (QA workflow) and 4 (API and Vue frontend) are done. Docs are in Chinese.
+ReviewProof (GitHub `xuyul6/ReviewProof`): pre-purchase, single-product review QA on AmazonQA data, with answerability (answered / partial / unanswerable) as the core metric. Built phase by phase per `docs/roadmap_cn.md`; phases 1 (data foundation), 2 (hybrid retrieval), 3 (QA workflow), 4 (API and Vue frontend) and 5a (silver-label evaluation, pilot) are done. Docs are in Chinese.
 
 The old system (BRIDGE: `bridge/`, `app/`, Supabase + Gemini retrieval, the small-sample demo) lives in a separate repo, `xuyul6/BRIDGE`, checked out at `/Users/lux/llmproj/BRIDGE-by-EE6405-D31`. It is reference material only (roadmap section 4 says what to consult in which phase); never copy it in wholesale or add code to it.
 
@@ -24,6 +24,8 @@ python -m reviewproof.workflow --qid 17020                          # answer wit
 python -m reviewproof.workflow --product B00007E7C8 --question "音量可以调节吗？" --json
 python -m reviewproof.api                                           # API on :8000 (+ frontend/dist at /); loads models at startup
 python -m reviewproof.mcp_server                                    # read-only MCP tools (REVIEWPROOF_MCP_TRANSPORT, default stdio)
+python -m reviewproof.eval --split dev --name pilot-dev             # retrieval eval on the whole split + workflow/B0/B1 on 50 sampled questions; real Claude calls
+python -m reviewproof.eval --split test --name NAME --retrieval-only   # retrieval only, no Claude calls
 ```
 
 Frontend (`frontend/`, Vue 3 + Vite + TypeScript; Node ≥ 20, nvm-managed locally):
@@ -65,6 +67,10 @@ Schema is `reviewproof/schema.sql` (datasets, products, reviews, chunks with `ve
 ### Phase 4: API, frontend, MCP (`reviewproof/api/`, `frontend/`, `reviewproof/mcp_server.py`, `reviewproof/runs.py`)
 
 `create_app()` builds `Services` once in the lifespan (applies the schema, loads LLM client, BGE-M3 and the reranker, warms them up). Endpoints: `GET /healthz`, `GET /v1/products?category=&split=`, `GET /v1/products/{id}/questions` (qid + text only), `GET /v1/evidence/{review_id}`, `GET /v1/runs/{run_id}`, `POST /v1/qa` (SSE). `qa.py` runs the workflow (`stream_answer`, which yields each node's `TraceEntry` then the `QAResult`) in a worker thread under a process-wide lock — one QA run at a time, because `BM25Cache` is not thread-safe and CPU inference gains nothing from overlap. Events: `run_started`, one `progress` per node, then `answer_chunk`s (the verified answer split by line / 120 chars — not token streaming), `citations`, `done` (incl. `persisted`), or `error` for unexpected exceptions. Service failures still end with `done` and HTTP 200; only bad input is 4xx (404 product, 422 blank question). Every run is saved to `qa_runs` before the answer is sent, and the worker finishes and saves even if the client disconnects. The Vue app talks to the API only through relative paths (`frontend/src/api/client.ts`, `parseSSE` in `sse.ts`, state in `composables/useAsk.ts`); the badge logic in `components/badge.ts` puts service failure before every answer status. The MCP server exposes `list_products`, `search_reviews` and `get_review` (no QA tool), sharing `reviewproof/api/queries.py` with the API.
+
+### Phase 5a: evaluation (`reviewproof/eval/`)
+
+Silver-label evaluation, written to `reports/eval/<name>/` (`config.json`, `retrieval.jsonl`, `per_question.jsonl`, `metrics.json`, `report.md`). `dataset.py` loads a split's questions and samples them stratified by category × silver label (seed 20261027). `alignment.py` maps AmazonQA's review snippets onto chunks (whitespace-insensitive, located in the full review then mapped by offset; snippets under 10 non-space characters are ignored) to build silver qrels. Every question aligns to about 10 chunks because AmazonQA's snippets are its own BM25 top 10, so retrieval scores measure agreement with that BM25, not relevance, and Recall@5 is capped near 0.5; the report says so. `retrieval_eval.py` ranks each question once and scores four variants (bm25, dense, hybrid, hybrid_rerank); full-context products, silver-unanswerable questions and unaligned questions are excluded and counted, and a hybrid variant is null when a channel it needs failed. `workflow_eval.py` runs the workflow, B0 (no evidence, `baselines.py`) and B1 (full context, hybrid-strategy products only), appending one JSON line per (question, system); rerunning the same command skips finished rows and retries rows that ended in a service failure or error. Cost prices each call at its own tier (`QAResult.usage`). `metrics.py` has rank metrics, bootstrap 95% intervals (1,000 resamples, seed 20261027) and paired differences; service failures are left out of every answerability denominator and counted separately. `report.py` compares B1 with the workflow only on B1's questions. Gold labels are phase 5b.
 
 ## Conventions
 

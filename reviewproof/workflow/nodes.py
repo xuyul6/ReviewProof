@@ -17,7 +17,7 @@ from reviewproof.workflow.answer import final_status, render_answer, verify_clai
 from reviewproof.workflow.prompts import (ASSESS_SYSTEM, GENERATE_SYSTEM, PLAN_SYSTEM, assess_prompt,
                                           generate_prompt, plan_prompt)
 from reviewproof.workflow.schemas import EvidenceAssessment, GeneratedAnswer, QueryPlan
-from reviewproof.workflow.state import QAState, RetrievalDeps, TraceEntry
+from reviewproof.workflow.state import QAState, RetrievalDeps, RetrievalSnapshot, TraceEntry
 
 _YES_NO_EN = re.compile(r"^\s*(is|are|does|do|did|can|will|would|should|could|has|have)\b", re.IGNORECASE)
 _YES_NO_ZH = ("吗", "是否", "能不能", "会不会")
@@ -58,12 +58,14 @@ class WorkflowNodes:
 
     def retrieve(self, state: QAState) -> dict:
         start = time.perf_counter()
-        result, error = self._retrieve(state, state["search_queries"][0])
+        query = state["search_queries"][0]
+        result, error = self._retrieve(state, query)
         if error:
             return {"service_failed": True, "trace": [TraceEntry("retrieve", "failed", error, _ms(start))]}
         status = "degraded" if result.service_status == "degraded" else "ok"
         return {"candidates": list(result.candidates), "strategy": result.strategy,
-                "retrieval_modes": [result.mode], "degraded": state.get("degraded", False) or status == "degraded",
+                "retrieval_modes": [result.mode], "retrieval_snapshots": [RetrievalSnapshot.of(query, result)],
+                "degraded": state.get("degraded", False) or status == "degraded",
                 "trace": [TraceEntry("retrieve", status,
                                      f"{result.strategy} mode={result.mode} candidates={len(result.candidates)}",
                                      _ms(start))]}
@@ -109,6 +111,7 @@ class WorkflowNodes:
         added = len(merged) - len(state["candidates"])
         status = "degraded" if result.service_status == "degraded" else "ok"
         update["retrieval_modes"] = [result.mode]
+        update["retrieval_snapshots"] = [RetrievalSnapshot.of(query, result)]
         if status == "degraded":
             update["degraded"] = True
         if added <= 0:

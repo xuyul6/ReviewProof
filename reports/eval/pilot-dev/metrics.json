@@ -1,0 +1,636 @@
+{
+  "config": {
+    "name": "pilot-dev",
+    "split": "dev",
+    "started_at": "2026-10-27T11:31:54+00:00",
+    "git_commit": "6988e6be52a6d50830dde27b58a7b79b54c28052",
+    "dataset_id": "amazonqa-val-v1",
+    "source_sha256": "866095e6cce9abe5bc142e0ff1326737d57b5f24b19670123c6006d618bd941f",
+    "embedding_model": "BAAI/bge-m3",
+    "rerank_model": "BAAI/bge-reranker-v2-m3",
+    "llm_model": "claude-haiku-5-5",
+    "retrieval_params": {
+      "rrf_k": 60,
+      "channel_top_k": 50,
+      "rerank_pool": 40,
+      "evidence_k": 8,
+      "full_context_max_tokens": 6000
+    },
+    "max_rewrites": 1,
+    "seed": 20261027,
+    "questions_in_split": 239,
+    "sample": 50,
+    "systems": [
+      "workflow",
+      "b0_no_evidence",
+      "b1_full_context"
+    ],
+    "cost_note": "Claude Haiku 5.5 prices as of 2026-10-27; each call priced at its own tier (over 100k input tokens is long-context)",
+    "report_rebuilt_from_saved_rows": "table layout fix after the run; no rows recomputed"
+  },
+  "retrieval": {
+    "n_total": 239,
+    "n_included": 145,
+    "excluded": {
+      "silver_unanswerable": 31,
+      "full_context": 63
+    },
+    "mean_relevant": 10.620689655172415,
+    "errors": {
+      "bm25": 0,
+      "dense": 0,
+      "hybrid": 0,
+      "hybrid_rerank": 0
+    },
+    "variants": {
+      "bm25": {
+        "n": 145,
+        "recall@5": {
+          "mean": 0.29864924910563856,
+          "lo": 0.2768742672698048,
+          "hi": 0.3193641990193714,
+          "n": 145
+        },
+        "recall@10": {
+          "mean": 0.46608419527283623,
+          "lo": 0.4357064008788147,
+          "hi": 0.4980006966213863,
+          "n": 145
+        },
+        "recall@20": {
+          "mean": 0.6442658592252912,
+          "lo": 0.6058588830596944,
+          "hi": 0.681118211290625,
+          "n": 145
+        },
+        "recall@40": {
+          "mean": 0.814774033719267,
+          "lo": 0.7823717278889692,
+          "hi": 0.8460868633282426,
+          "n": 145
+        },
+        "hit@5": {
+          "mean": 0.9862068965517241,
+          "lo": 0.9655172413793104,
+          "hi": 1.0,
+          "n": 145
+        },
+        "mrr@10": {
+          "mean": 0.8721072796934866,
+          "lo": 0.830536398467433,
+          "hi": 0.9120689655172414,
+          "n": 145
+        },
+        "ndcg@5": {
+          "mean": 0.6648768351412689,
+          "lo": 0.6215673063035011,
+          "hi": 0.7043535743573162,
+          "n": 145
+        }
+      },
+      "dense": {
+        "n": 145,
+        "recall@5": {
+          "mean": 0.16526634172678797,
+          "lo": 0.14433665950907332,
+          "hi": 0.18576000289996233,
+          "n": 145
+        },
+        "recall@10": {
+          "mean": 0.26380378692751916,
+          "lo": 0.23324287274591535,
+          "hi": 0.29397395707740537,
+          "n": 145
+        },
+        "recall@20": {
+          "mean": 0.3948074249392708,
+          "lo": 0.35496851807196633,
+          "hi": 0.43023037363808153,
+          "n": 145
+        },
+        "recall@40": {
+          "mean": 0.5676936124502047,
+          "lo": 0.5228063124614848,
+          "hi": 0.607545615304236,
+          "n": 145
+        },
+        "hit@5": {
+          "mean": 0.8137931034482758,
+          "lo": 0.7448275862068966,
+          "hi": 0.8758620689655172,
+          "n": 145
+        },
+        "mrr@10": {
+          "mean": 0.6326409414340449,
+          "lo": 0.5652244116037219,
+          "hi": 0.6987876299945266,
+          "n": 145
+        },
+        "ndcg@5": {
+          "mean": 0.3756785812047134,
+          "lo": 0.3296476409478295,
+          "hi": 0.42195865775429237,
+          "n": 145
+        }
+      },
+      "hybrid": {
+        "n": 145,
+        "recall@5": {
+          "mean": 0.25550334610172337,
+          "lo": 0.2336917466126391,
+          "hi": 0.276567894580065,
+          "n": 145
+        },
+        "recall@10": {
+          "mean": 0.41626464025044146,
+          "lo": 0.3852336405987522,
+          "hi": 0.4471635689079908,
+          "n": 145
+        },
+        "recall@20": {
+          "mean": 0.5864698553643787,
+          "lo": 0.5506751711214185,
+          "hi": 0.6201855266662569,
+          "n": 145
+        },
+        "recall@40": {
+          "mean": 0.7726726293764833,
+          "lo": 0.736824430921794,
+          "hi": 0.8052664959561512,
+          "n": 145
+        },
+        "hit@5": {
+          "mean": 0.9379310344827586,
+          "lo": 0.8896551724137931,
+          "hi": 0.9724137931034482,
+          "n": 145
+        },
+        "mrr@10": {
+          "mean": 0.8421811713191023,
+          "lo": 0.7918253968253968,
+          "hi": 0.8886343732895456,
+          "n": 145
+        },
+        "ndcg@5": {
+          "mean": 0.5842253698165453,
+          "lo": 0.5393068986722753,
+          "hi": 0.6283789126648265,
+          "n": 145
+        }
+      },
+      "hybrid_rerank": {
+        "n": 145,
+        "recall@5": {
+          "mean": 0.24470651840834395,
+          "lo": 0.22097953657791386,
+          "hi": 0.26642563881914794,
+          "n": 145
+        },
+        "recall@10": {
+          "mean": 0.39813014346482906,
+          "lo": 0.36682003369630145,
+          "hi": 0.428099118596076,
+          "n": 145
+        },
+        "recall@20": {
+          "mean": 0.5749843293960941,
+          "lo": 0.5389871048491738,
+          "hi": 0.610312781651524,
+          "n": 145
+        },
+        "recall@40": {
+          "mean": 0.7726726293764833,
+          "lo": 0.736824430921794,
+          "hi": 0.8052664959561512,
+          "n": 145
+        },
+        "hit@5": {
+          "mean": 0.9517241379310345,
+          "lo": 0.9103448275862069,
+          "hi": 0.9793103448275862,
+          "n": 145
+        },
+        "mrr@10": {
+          "mean": 0.797728516694034,
+          "lo": 0.7401970443349754,
+          "hi": 0.8438697318007663,
+          "n": 145
+        },
+        "ndcg@5": {
+          "mean": 0.5527638137107818,
+          "lo": 0.5042300556401694,
+          "hi": 0.5966262593285558,
+          "n": 145
+        }
+      }
+    },
+    "hybrid_rerank_minus": {
+      "bm25": {
+        "hit@5": {
+          "mean": -0.034482758620689655,
+          "lo": -0.07586206896551724,
+          "hi": 0.006896551724137931,
+          "n": 145
+        },
+        "ndcg@5": {
+          "mean": -0.11211302143048708,
+          "lo": -0.15582460990888647,
+          "hi": -0.07214433939806332,
+          "n": 145
+        }
+      },
+      "dense": {
+        "hit@5": {
+          "mean": 0.13793103448275862,
+          "lo": 0.06896551724137931,
+          "hi": 0.20689655172413793,
+          "n": 145
+        },
+        "ndcg@5": {
+          "mean": 0.17708523250606842,
+          "lo": 0.13399363278036,
+          "hi": 0.21957471715333368,
+          "n": 145
+        }
+      },
+      "hybrid": {
+        "hit@5": {
+          "mean": 0.013793103448275862,
+          "lo": -0.027586206896551724,
+          "hi": 0.05517241379310345,
+          "n": 145
+        },
+        "ndcg@5": {
+          "mean": -0.031461556105763525,
+          "lo": -0.07174947183484044,
+          "hi": 0.007256050198106127,
+          "n": 145
+        }
+      }
+    },
+    "hit@5_by_category": {
+      "Automotive": {
+        "bm25": {
+          "mean": 1.0,
+          "lo": 1.0,
+          "hi": 1.0,
+          "n": 28
+        },
+        "dense": {
+          "mean": 0.75,
+          "lo": 0.5714285714285714,
+          "hi": 0.8928571428571429,
+          "n": 28
+        },
+        "hybrid": {
+          "mean": 1.0,
+          "lo": 1.0,
+          "hi": 1.0,
+          "n": 28
+        },
+        "hybrid_rerank": {
+          "mean": 1.0,
+          "lo": 1.0,
+          "hi": 1.0,
+          "n": 28
+        }
+      },
+      "Beauty": {
+        "bm25": {
+          "mean": 1.0,
+          "lo": 1.0,
+          "hi": 1.0,
+          "n": 36
+        },
+        "dense": {
+          "mean": 0.8888888888888888,
+          "lo": 0.7777777777777778,
+          "hi": 0.9722222222222222,
+          "n": 36
+        },
+        "hybrid": {
+          "mean": 1.0,
+          "lo": 1.0,
+          "hi": 1.0,
+          "n": 36
+        },
+        "hybrid_rerank": {
+          "mean": 0.9722222222222222,
+          "lo": 0.9166666666666666,
+          "hi": 1.0,
+          "n": 36
+        }
+      },
+      "Electronics": {
+        "bm25": {
+          "mean": 0.9512195121951219,
+          "lo": 0.8780487804878049,
+          "hi": 1.0,
+          "n": 41
+        },
+        "dense": {
+          "mean": 0.7560975609756098,
+          "lo": 0.6097560975609756,
+          "hi": 0.8780487804878049,
+          "n": 41
+        },
+        "hybrid": {
+          "mean": 0.8780487804878049,
+          "lo": 0.7560975609756098,
+          "hi": 0.975609756097561,
+          "n": 41
+        },
+        "hybrid_rerank": {
+          "mean": 0.9024390243902439,
+          "lo": 0.8048780487804879,
+          "hi": 0.975609756097561,
+          "n": 41
+        }
+      },
+      "Home_and_Kitchen": {
+        "bm25": {
+          "mean": 1.0,
+          "lo": 1.0,
+          "hi": 1.0,
+          "n": 40
+        },
+        "dense": {
+          "mean": 0.85,
+          "lo": 0.725,
+          "hi": 0.95,
+          "n": 40
+        },
+        "hybrid": {
+          "mean": 0.9,
+          "lo": 0.8,
+          "hi": 0.975,
+          "n": 40
+        },
+        "hybrid_rerank": {
+          "mean": 0.95,
+          "lo": 0.875,
+          "hi": 1.0,
+          "n": 40
+        }
+      }
+    }
+  },
+  "answerability": {
+    "workflow": {
+      "n": 50,
+      "n_scored": 50,
+      "n_service_failed": 0,
+      "status_counts": {
+        "unanswerable": 12,
+        "answered": 23,
+        "partial": 15
+      },
+      "correct_refusal_rate": {
+        "mean": 0.25,
+        "lo": 0.0,
+        "hi": 0.5,
+        "n": 12
+      },
+      "false_refusal_rate": {
+        "mean": 0.23684210526315788,
+        "lo": 0.10526315789473684,
+        "hi": 0.3684210526315789,
+        "n": 38
+      },
+      "answer_precision": 0.7631578947368421,
+      "answer_recall": 0.7631578947368421,
+      "answer_f1": {
+        "mean": 0.7631578947368421,
+        "lo": 0.6567164179104478,
+        "hi": 0.8607594936708861,
+        "n": 50
+      },
+      "accuracy": {
+        "mean": 0.64,
+        "lo": 0.52,
+        "hi": 0.78,
+        "n": 50
+      },
+      "service_failure_reported_as_unanswerable": 0
+    },
+    "b0_no_evidence": {
+      "n": 50,
+      "n_scored": 50,
+      "n_service_failed": 0,
+      "status_counts": {
+        "unanswerable": 44,
+        "answered": 6
+      },
+      "correct_refusal_rate": {
+        "mean": 0.9166666666666666,
+        "lo": 0.75,
+        "hi": 1.0,
+        "n": 12
+      },
+      "false_refusal_rate": {
+        "mean": 0.868421052631579,
+        "lo": 0.7368421052631579,
+        "hi": 0.9473684210526315,
+        "n": 38
+      },
+      "answer_precision": 0.8333333333333334,
+      "answer_recall": 0.13157894736842105,
+      "answer_f1": {
+        "mean": 0.22727272727272727,
+        "lo": 0.05,
+        "hi": 0.39215686274509803,
+        "n": 50
+      },
+      "accuracy": {
+        "mean": 0.32,
+        "lo": 0.2,
+        "hi": 0.44,
+        "n": 50
+      },
+      "service_failure_reported_as_unanswerable": 0
+    },
+    "b1_full_context": {
+      "n": 40,
+      "n_scored": 40,
+      "n_service_failed": 0,
+      "status_counts": {
+        "answered": 21,
+        "partial": 12,
+        "unanswerable": 7
+      },
+      "correct_refusal_rate": {
+        "mean": 0.25,
+        "lo": 0.0,
+        "hi": 0.625,
+        "n": 8
+      },
+      "false_refusal_rate": {
+        "mean": 0.15625,
+        "lo": 0.03125,
+        "hi": 0.28125,
+        "n": 32
+      },
+      "answer_precision": 0.8181818181818182,
+      "answer_recall": 0.84375,
+      "answer_f1": {
+        "mean": 0.8307692307692308,
+        "lo": 0.711864406779661,
+        "hi": 0.9166666666666666,
+        "n": 40
+      },
+      "accuracy": {
+        "mean": 0.725,
+        "lo": 0.575,
+        "hi": 0.85,
+        "n": 40
+      },
+      "service_failure_reported_as_unanswerable": 0
+    },
+    "workflow_b1_qids": {
+      "n": 40,
+      "n_scored": 40,
+      "n_service_failed": 0,
+      "status_counts": {
+        "unanswerable": 11,
+        "answered": 20,
+        "partial": 9
+      },
+      "correct_refusal_rate": {
+        "mean": 0.375,
+        "lo": 0.125,
+        "hi": 0.75,
+        "n": 8
+      },
+      "false_refusal_rate": {
+        "mean": 0.25,
+        "lo": 0.125,
+        "hi": 0.40625,
+        "n": 32
+      },
+      "answer_precision": 0.8275862068965517,
+      "answer_recall": 0.75,
+      "answer_f1": {
+        "mean": 0.7868852459016393,
+        "lo": 0.6666666666666666,
+        "hi": 0.8923076923076924,
+        "n": 40
+      },
+      "accuracy": {
+        "mean": 0.675,
+        "lo": 0.525,
+        "hi": 0.825,
+        "n": 40
+      },
+      "service_failure_reported_as_unanswerable": 0
+    }
+  },
+  "cost_latency": {
+    "workflow": {
+      "n": 50,
+      "cost_usd_total": 0.0499793,
+      "cost_usd_mean": 0.000999586,
+      "latency_ms_p50": 15713.494917028584,
+      "latency_ms_p95": 28833.31666700542,
+      "llm_calls_mean": 2.98,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    },
+    "b0_no_evidence": {
+      "n": 50,
+      "cost_usd_total": 0.0049224,
+      "cost_usd_mean": 9.8448e-05,
+      "latency_ms_p50": 1930.5911250412464,
+      "latency_ms_p95": 4694.175250013359,
+      "llm_calls_mean": 1.0,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    },
+    "b1_full_context": {
+      "n": 40,
+      "cost_usd_total": 1.4798489,
+      "cost_usd_mean": 0.036996222499999995,
+      "latency_ms_p50": 8106.2925410224125,
+      "latency_ms_p95": 14705.718250013888,
+      "llm_calls_mean": 2.7,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    },
+    "workflow_b1_qids": {
+      "n": 40,
+      "cost_usd_total": 0.0367571,
+      "cost_usd_mean": 0.0009189275,
+      "latency_ms_p50": 18009.87604202237,
+      "latency_ms_p95": 28833.31666700542,
+      "llm_calls_mean": 3.0,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    }
+  },
+  "failure_cases": {
+    "false_refusal": [
+      {
+        "qid": "16553",
+        "status": "unanswerable",
+        "answerable_silver": true,
+        "answer": "The reviews don't confirm this."
+      },
+      {
+        "qid": "47639",
+        "status": "unanswerable",
+        "answerable_silver": true,
+        "answer": "This question is outside what reviews can answer: Comparisons with other products are outside what customer reviews of this item can answer."
+      },
+      {
+        "qid": "49083",
+        "status": "unanswerable",
+        "answerable_silver": true,
+        "answer": "The reviews don't confirm this."
+      },
+      {
+        "qid": "51228",
+        "status": "unanswerable",
+        "answerable_silver": true,
+        "answer": "This question is outside what reviews can answer: The question asks for a recommendation of a router type and compares it with other equipment (Motorola SB6121 and UniFi AP), which reviews of this sin"
+      },
+      {
+        "qid": "54504",
+        "status": "unanswerable",
+        "answerable_silver": true,
+        "answer": "This question is outside what reviews can answer: Warranty information must come from the seller, not customer reviews."
+      }
+    ],
+    "answered_silver_unanswerable": [
+      {
+        "qid": "37947",
+        "status": "answered",
+        "answerable_silver": false,
+        "answer": "Verdict: Can't confirm\nOne reviewer applied the adhesive vinyl to wood candles outdoors and said it adhered so well they looked painted on. [1]\nSeveral reviewers say the vinyl is very sticky and adher"
+      },
+      {
+        "qid": "39526",
+        "status": "partial",
+        "answerable_silver": false,
+        "answer": "Verdict: Can't confirm\nUn comprador dice que la bobina costó la mitad que en un concesionario Dodge y que, tras instalarla, se apagó la luz de revisión del motor. [1]\nOtra reseña dice que la bobina en"
+      },
+      {
+        "qid": "51047",
+        "status": "answered",
+        "answerable_silver": false,
+        "answer": "The mirror tray is small: a reviewer said it was too small to center on a dresser and would not recommend it as a show piece. [1]\nOne reviewer said the tray is very small and would not look good on a "
+      },
+      {
+        "qid": "57900",
+        "status": "partial",
+        "answerable_silver": false,
+        "answer": "One reviewer lives in the mountains with only two poor local stations and did not have a clear view to the south, so they bought a 50-foot antenna cable for the house; the dock and play system worked "
+      },
+      {
+        "qid": "60113",
+        "status": "partial",
+        "answerable_silver": false,
+        "answer": "Verdict: Can't confirm\nReviewers report the cover fits their Ford F-150 trucks well, including a 2012 F150 Lariat, and one reviewer's 2013 F150 fit as well. [1][2]\nOne reviewer said the cover fit abso"
+      }
+    ],
+    "errors": []
+  }
+}

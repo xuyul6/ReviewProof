@@ -42,6 +42,14 @@ class RunStoreTests(DatabaseTestCase):
         self.assertEqual([t["node"] for t in run["trace"]], [t.node for t in result.trace])
         self.assertIsInstance(run["created_at"], str)
 
+    def test_snapshots_round_trip(self):
+        result = self.run_workflow(answered_script())
+        run_id = new_run_id()
+        save_run(self.conn, run_id, result, "fake-llm")
+        run = get_run(self.conn, run_id)
+        self.assertTrue(run["retrievals"][0]["candidates"])
+        self.assertEqual(run["retrievals"][0]["query"], "loud")
+
     def test_get_unknown_returns_none(self):
         self.assertIsNone(get_run(self.conn, "nope"))
 
