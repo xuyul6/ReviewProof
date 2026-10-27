@@ -9,7 +9,7 @@ from pgvector.psycopg import register_vector
 EMBEDDING_DIM = 1024
 
 # Child tables first, so this order also works for deletes.
-ALL_TABLES = ("qa_runs", "questions", "chunks", "reviews", "products", "datasets")
+ALL_TABLES = ("qa_runs", "annotation_labels", "annotation_items", "questions", "chunks", "reviews", "products", "datasets")
 
 
 def connect(database_url: str) -> psycopg.Connection:
