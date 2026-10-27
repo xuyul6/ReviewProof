@@ -1,19 +1,28 @@
 """FastAPI app: read-only endpoints, the streaming QA endpoint, and the built Vue frontend."""
 from __future__ import annotations
 
+import json
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 
 from reviewproof.api import queries
+from reviewproof.api.qa import qa_events
 from reviewproof.api.services import Services, build_services, warm_up
 from reviewproof.config import load_settings
 from reviewproof.runs import get_run
 
 FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+
+
+class AskBody(BaseModel):
+    product_id: str
+    question: str
 
 
 def create_app(services: Services | None = None, static_dir: Path | None = FRONTEND_DIST) -> FastAPI:
@@ -73,6 +82,22 @@ def create_app(services: Services | None = None, static_dir: Path | None = FRONT
         if body is None:
             raise HTTPException(404, "run not found")
         return body
+
+    @app.post("/v1/qa")
+    def ask(body: AskBody) -> StreamingResponse:
+        if not body.question.strip():
+            raise HTTPException(422, "question is empty")
+        with svc().connect() as conn:
+            exists = conn.execute("SELECT 1 FROM products WHERE product_id = %s", (body.product_id,)).fetchone()
+        if exists is None:
+            raise HTTPException(404, "product not found")
+
+        def stream():
+            for name, data in qa_events(svc(), body.product_id, body.question.strip()):
+                yield f"event: {name}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+        return StreamingResponse(stream(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     if static_dir is not None and (static_dir / "index.html").is_file():
         app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
