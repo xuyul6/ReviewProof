@@ -1,0 +1,9 @@
+python-dotenv>=1.0.1,<2.0.0
+numpy>=1.26.4,<3.0.0
+
+# Embeddings (BGE-M3)
+sentence-transformers>=3.0.1,<4.0.0
+
+# Database
+psycopg[binary]>=3.2,<4
+pgvector>=0.3,<1

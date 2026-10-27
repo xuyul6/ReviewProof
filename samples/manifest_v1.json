@@ -1,0 +1,834 @@
+{
+  "dataset_id": "amazonqa-val-v1",
+  "manifest_version": 1,
+  "products": [
+    {
+      "band": "large",
+      "category": "Electronics",
+      "product_id": "B0049MV5OK",
+      "question_count": 10,
+      "review_count": 277,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Electronics",
+      "product_id": "B003IHV6XW",
+      "question_count": 8,
+      "review_count": 304,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Electronics",
+      "product_id": "B00BJ1COYO",
+      "question_count": 10,
+      "review_count": 243,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Electronics",
+      "product_id": "B00CHJ34P0",
+      "question_count": 6,
+      "review_count": 246,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Electronics",
+      "product_id": "B00007E7C8",
+      "question_count": 9,
+      "review_count": 1962,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Electronics",
+      "product_id": "B00AQUMZRA",
+      "question_count": 9,
+      "review_count": 426,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Electronics",
+      "product_id": "B004XXMUCQ",
+      "question_count": 10,
+      "review_count": 395,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Electronics",
+      "product_id": "B000VOE466",
+      "question_count": 7,
+      "review_count": 259,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Electronics",
+      "product_id": "B00B8P8IVO",
+      "question_count": 8,
+      "review_count": 1189,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Electronics",
+      "product_id": "B005BDAR5E",
+      "question_count": 8,
+      "review_count": 455,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Electronics",
+      "product_id": "B001SVNHIC",
+      "question_count": 8,
+      "review_count": 133,
+      "split": "dev"
+    },
+    {
+      "band": "medium",
+      "category": "Electronics",
+      "product_id": "B00D0IT27Q",
+      "question_count": 7,
+      "review_count": 66,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Electronics",
+      "product_id": "B004THA2OE",
+      "question_count": 7,
+      "review_count": 117,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Electronics",
+      "product_id": "B004FL92RM",
+      "question_count": 7,
+      "review_count": 139,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Electronics",
+      "product_id": "B001HKM1HM",
+      "question_count": 9,
+      "review_count": 112,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Electronics",
+      "product_id": "B00E3RHS6A",
+      "question_count": 10,
+      "review_count": 120,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Electronics",
+      "product_id": "B007K5H4Z2",
+      "question_count": 8,
+      "review_count": 118,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Electronics",
+      "product_id": "B00111UX40",
+      "question_count": 6,
+      "review_count": 53,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Electronics",
+      "product_id": "B000W5OYAA",
+      "question_count": 5,
+      "review_count": 151,
+      "split": "dev"
+    },
+    {
+      "band": "medium",
+      "category": "Electronics",
+      "product_id": "B004EDPYHI",
+      "question_count": 8,
+      "review_count": 84,
+      "split": "dev"
+    },
+    {
+      "band": "small",
+      "category": "Electronics",
+      "product_id": "B007VWZVB8",
+      "question_count": 6,
+      "review_count": 19,
+      "split": "dev"
+    },
+    {
+      "band": "small",
+      "category": "Electronics",
+      "product_id": "B005LRTH3I",
+      "question_count": 7,
+      "review_count": 32,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Electronics",
+      "product_id": "B0060US0AQ",
+      "question_count": 8,
+      "review_count": 20,
+      "split": "dev"
+    },
+    {
+      "band": "small",
+      "category": "Electronics",
+      "product_id": "B00J97X2YG",
+      "question_count": 7,
+      "review_count": 16,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Electronics",
+      "product_id": "B00J6W8O6K",
+      "question_count": 9,
+      "review_count": 5,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Home_and_Kitchen",
+      "product_id": "B005M8Y3YE",
+      "question_count": 8,
+      "review_count": 247,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Home_and_Kitchen",
+      "product_id": "B0047Y0UQO",
+      "question_count": 8,
+      "review_count": 1831,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Home_and_Kitchen",
+      "product_id": "B002V9195S",
+      "question_count": 9,
+      "review_count": 389,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Home_and_Kitchen",
+      "product_id": "B001DYJ9ZO",
+      "question_count": 6,
+      "review_count": 497,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Home_and_Kitchen",
+      "product_id": "B000079XWA",
+      "question_count": 10,
+      "review_count": 261,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Home_and_Kitchen",
+      "product_id": "B001HL02Q8",
+      "question_count": 6,
+      "review_count": 202,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Home_and_Kitchen",
+      "product_id": "B00D93AT24",
+      "question_count": 10,
+      "review_count": 207,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Home_and_Kitchen",
+      "product_id": "B005HH5YUM",
+      "question_count": 8,
+      "review_count": 246,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Home_and_Kitchen",
+      "product_id": "B000F0BYR8",
+      "question_count": 7,
+      "review_count": 227,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Home_and_Kitchen",
+      "product_id": "B001CQTLJM",
+      "question_count": 9,
+      "review_count": 674,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Home_and_Kitchen",
+      "product_id": "B006IC09P0",
+      "question_count": 8,
+      "review_count": 158,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Home_and_Kitchen",
+      "product_id": "B000H4QEZE",
+      "question_count": 9,
+      "review_count": 62,
+      "split": "dev"
+    },
+    {
+      "band": "medium",
+      "category": "Home_and_Kitchen",
+      "product_id": "B001AQERMK",
+      "question_count": 6,
+      "review_count": 167,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Home_and_Kitchen",
+      "product_id": "B001713LA2",
+      "question_count": 9,
+      "review_count": 92,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Home_and_Kitchen",
+      "product_id": "B00345V7CI",
+      "question_count": 8,
+      "review_count": 91,
+      "split": "dev"
+    },
+    {
+      "band": "medium",
+      "category": "Home_and_Kitchen",
+      "product_id": "B000JZYOHQ",
+      "question_count": 10,
+      "review_count": 68,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Home_and_Kitchen",
+      "product_id": "B0052EIN3U",
+      "question_count": 7,
+      "review_count": 81,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Home_and_Kitchen",
+      "product_id": "B0051T8XMW",
+      "question_count": 8,
+      "review_count": 92,
+      "split": "dev"
+    },
+    {
+      "band": "medium",
+      "category": "Home_and_Kitchen",
+      "product_id": "B000YJO0HQ",
+      "question_count": 8,
+      "review_count": 110,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Home_and_Kitchen",
+      "product_id": "B00B2B98K4",
+      "question_count": 7,
+      "review_count": 52,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Home_and_Kitchen",
+      "product_id": "B00EQHEURM",
+      "question_count": 5,
+      "review_count": 14,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Home_and_Kitchen",
+      "product_id": "B00HBXYFXW",
+      "question_count": 7,
+      "review_count": 18,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Home_and_Kitchen",
+      "product_id": "B004VMAC7Y",
+      "question_count": 6,
+      "review_count": 7,
+      "split": "dev"
+    },
+    {
+      "band": "small",
+      "category": "Home_and_Kitchen",
+      "product_id": "B002WPOV8I",
+      "question_count": 5,
+      "review_count": 12,
+      "split": "dev"
+    },
+    {
+      "band": "small",
+      "category": "Home_and_Kitchen",
+      "product_id": "B00AE6Q9SC",
+      "question_count": 10,
+      "review_count": 18,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Automotive",
+      "product_id": "B0047RV8WG",
+      "question_count": 7,
+      "review_count": 408,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Automotive",
+      "product_id": "B00267PZUK",
+      "question_count": 8,
+      "review_count": 410,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Automotive",
+      "product_id": "B0002Z9QO4",
+      "question_count": 8,
+      "review_count": 319,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Automotive",
+      "product_id": "B004B61B34",
+      "question_count": 9,
+      "review_count": 249,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Automotive",
+      "product_id": "B007ECFURK",
+      "question_count": 7,
+      "review_count": 378,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Automotive",
+      "product_id": "B000VERBCU",
+      "question_count": 9,
+      "review_count": 257,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Automotive",
+      "product_id": "B003FBV8ZW",
+      "question_count": 8,
+      "review_count": 555,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Automotive",
+      "product_id": "B002RSIK4G",
+      "question_count": 7,
+      "review_count": 203,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Automotive",
+      "product_id": "B000RXKR6M",
+      "question_count": 9,
+      "review_count": 218,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Automotive",
+      "product_id": "B0031ZDU62",
+      "question_count": 9,
+      "review_count": 220,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Automotive",
+      "product_id": "B003LFQ7W6",
+      "question_count": 8,
+      "review_count": 84,
+      "split": "dev"
+    },
+    {
+      "band": "medium",
+      "category": "Automotive",
+      "product_id": "B009ZVI1HY",
+      "question_count": 10,
+      "review_count": 131,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Automotive",
+      "product_id": "B0044R871Y",
+      "question_count": 8,
+      "review_count": 58,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Automotive",
+      "product_id": "B001DCF6IA",
+      "question_count": 9,
+      "review_count": 79,
+      "split": "dev"
+    },
+    {
+      "band": "medium",
+      "category": "Automotive",
+      "product_id": "B000QGOPO0",
+      "question_count": 10,
+      "review_count": 62,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Automotive",
+      "product_id": "B000OC3Q2I",
+      "question_count": 7,
+      "review_count": 88,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Automotive",
+      "product_id": "B005X4QCAA",
+      "question_count": 9,
+      "review_count": 124,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Automotive",
+      "product_id": "B0052JD9H0",
+      "question_count": 8,
+      "review_count": 67,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Automotive",
+      "product_id": "B002E2WMWG",
+      "question_count": 5,
+      "review_count": 79,
+      "split": "dev"
+    },
+    {
+      "band": "medium",
+      "category": "Automotive",
+      "product_id": "B004C5P50Y",
+      "question_count": 8,
+      "review_count": 70,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Automotive",
+      "product_id": "B004Y6PTX4",
+      "question_count": 5,
+      "review_count": 2,
+      "split": "dev"
+    },
+    {
+      "band": "small",
+      "category": "Automotive",
+      "product_id": "B005BU5DCO",
+      "question_count": 7,
+      "review_count": 2,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Automotive",
+      "product_id": "B00B1ETCFS",
+      "question_count": 6,
+      "review_count": 11,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Automotive",
+      "product_id": "B000BRJVIY",
+      "question_count": 5,
+      "review_count": 47,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Automotive",
+      "product_id": "B009EU5ZMK",
+      "question_count": 7,
+      "review_count": 26,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Beauty",
+      "product_id": "B005I2MP62",
+      "question_count": 9,
+      "review_count": 263,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Beauty",
+      "product_id": "B004FEKA3E",
+      "question_count": 6,
+      "review_count": 514,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Beauty",
+      "product_id": "B00CYA5E1O",
+      "question_count": 10,
+      "review_count": 300,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Beauty",
+      "product_id": "B003RW2K0G",
+      "question_count": 9,
+      "review_count": 215,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Beauty",
+      "product_id": "B0009XH6TG",
+      "question_count": 9,
+      "review_count": 689,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Beauty",
+      "product_id": "B00365DABC",
+      "question_count": 7,
+      "review_count": 222,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Beauty",
+      "product_id": "B002N5MKMG",
+      "question_count": 9,
+      "review_count": 296,
+      "split": "dev"
+    },
+    {
+      "band": "large",
+      "category": "Beauty",
+      "product_id": "B005X2F7JY",
+      "question_count": 9,
+      "review_count": 366,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Beauty",
+      "product_id": "B001ABLKK2",
+      "question_count": 7,
+      "review_count": 377,
+      "split": "test"
+    },
+    {
+      "band": "large",
+      "category": "Beauty",
+      "product_id": "B001AO0WCG",
+      "question_count": 9,
+      "review_count": 1136,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Beauty",
+      "product_id": "B006LRRQK8",
+      "question_count": 8,
+      "review_count": 114,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Beauty",
+      "product_id": "B003CIOTDG",
+      "question_count": 5,
+      "review_count": 89,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Beauty",
+      "product_id": "B004D281CK",
+      "question_count": 8,
+      "review_count": 69,
+      "split": "dev"
+    },
+    {
+      "band": "medium",
+      "category": "Beauty",
+      "product_id": "B0009R34JI",
+      "question_count": 5,
+      "review_count": 83,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Beauty",
+      "product_id": "B000C1VX5S",
+      "question_count": 6,
+      "review_count": 109,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Beauty",
+      "product_id": "B001ET7HJI",
+      "question_count": 5,
+      "review_count": 164,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Beauty",
+      "product_id": "B008O1V33A",
+      "question_count": 8,
+      "review_count": 104,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Beauty",
+      "product_id": "B00ABBC7XQ",
+      "question_count": 7,
+      "review_count": 197,
+      "split": "test"
+    },
+    {
+      "band": "medium",
+      "category": "Beauty",
+      "product_id": "B002LE8P6O",
+      "question_count": 9,
+      "review_count": 63,
+      "split": "dev"
+    },
+    {
+      "band": "medium",
+      "category": "Beauty",
+      "product_id": "B0087P9PB0",
+      "question_count": 7,
+      "review_count": 58,
+      "split": "dev"
+    },
+    {
+      "band": "small",
+      "category": "Beauty",
+      "product_id": "B000KOK6EQ",
+      "question_count": 5,
+      "review_count": 3,
+      "split": "dev"
+    },
+    {
+      "band": "small",
+      "category": "Beauty",
+      "product_id": "B00EXLLXHG",
+      "question_count": 8,
+      "review_count": 36,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Beauty",
+      "product_id": "B00EP4B0IS",
+      "question_count": 5,
+      "review_count": 21,
+      "split": "test"
+    },
+    {
+      "band": "small",
+      "category": "Beauty",
+      "product_id": "B00B7ZFMA0",
+      "question_count": 7,
+      "review_count": 31,
+      "split": "dev"
+    },
+    {
+      "band": "small",
+      "category": "Beauty",
+      "product_id": "B00GAZOMNK",
+      "question_count": 6,
+      "review_count": 3,
+      "split": "test"
+    }
+  ],
+  "rules": {
+    "bands": {
+      "large": ">=200",
+      "medium": "50-199",
+      "small": "1-49"
+    },
+    "categories": [
+      "Electronics",
+      "Home_and_Kitchen",
+      "Automotive",
+      "Beauty"
+    ],
+    "dev_fraction": 0.3,
+    "min_questions": 5,
+    "per_band": {
+      "large": 10,
+      "medium": 10,
+      "small": 5
+    },
+    "seed": 20261027
+  },
+  "shortfalls": [],
+  "source": {
+    "products_file": "data/val-qar_products.jsonl",
+    "products_sha256": "866095e6cce9abe5bc142e0ff1326737d57b5f24b19670123c6006d618bd941f",
+    "questions_file": "data/val-qar.jsonl",
+    "questions_sha256": "b305669dd24871d855369522e9aaac30e63671093de1e5afbe4f07c11efaaf20"
+  }
+}
