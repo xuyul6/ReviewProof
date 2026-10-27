@@ -35,13 +35,13 @@ def format_table(result: RetrievalResult) -> str:
         lines.append(f"  {c.name:<7} {c.status:<8} {c.latency_ms:8.1f} ms  hits={c.hits:<3} {c.reason or ''}")
     lines += ["", f"{'#':>2}  {'chunk_id':<26} {'dense':>5} {'bm25':>5} {'rrf':>7} {'rerank':>7}  text"]
 
-    def fmt(value, spec):
-        return format(value, spec) if value is not None else "-"
+    def fmt(value, spec, width):
+        return format(value, spec) if value is not None else "-".rjust(width)
 
     for i, c in enumerate(result.candidates, start=1):
         text = c.chunk.text if len(c.chunk.text) <= 100 else c.chunk.text[:99] + "…"
-        lines.append(f"{i:>2}  {c.chunk.chunk_id:<26} {fmt(c.dense_rank, '>5')} {fmt(c.bm25_rank, '>5')} "
-                     f"{fmt(c.rrf_score, '>7.4f')} {fmt(c.rerank_score, '>7.3f')}  {text}")
+        lines.append(f"{i:>2}  {c.chunk.chunk_id:<26} {fmt(c.dense_rank, '>5', 5)} {fmt(c.bm25_rank, '>5', 5)} "
+                     f"{fmt(c.rrf_score, '>7.4f', 7)} {fmt(c.rerank_score, '>7.3f', 7)}  {text}")
     return "\n".join(lines)
 
 

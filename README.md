@@ -7,7 +7,10 @@
 
 ## 当前进度
 
-第 1 阶段（数据底座）已完成：从 AmazonQA 抽样 100 件商品（4 个品类），共 22,433 条评论、24,599 个评论块和 767 道评测题，存入 PostgreSQL + pgvector，每个块都有 BGE-M3 向量。检索、问答工作流、接口和界面在后续阶段实现。
+- 第 1 阶段（数据底座）：从 AmazonQA 抽样 100 件商品（4 个品类），共 22,433 条评论、24,599 个评论块和 767 道评测题，存入 PostgreSQL + pgvector，每个块都有 BGE-M3 向量。
+- 第 2 阶段（混合检索）：给定商品和问题，评论少的商品直接返回全部评论块，其余商品用向量检索和 BM25 两路召回、RRF 融合、BGE 重排，取 8 条证据。任一路出故障时另一路继续，并记录实际用了哪些通道。
+
+问答工作流、接口和界面在后续阶段实现。
 
 ## 本地运行
 
@@ -27,6 +30,13 @@ python -m reviewproof.ingest --manifest samples/manifest_v1.json
 ```
 
 命令会先核对数据文件的 SHA-256，再写入商品、评论、评论块和题目，最后计算向量并校验。可以重复运行：已经写入的数据不会重复，中途中断后再运行会接着计算剩下的向量。首次运行会从 Hugging Face 下载 `BAAI/bge-m3`（约 2.3 GB）。
+
+查看某道题的检索结果（第一次运行会下载重排模型 `BAAI/bge-reranker-v2-m3`，约 2.3 GB；加 `--no-rerank` 可以跳过重排）：
+
+```bash
+python -m reviewproof.retrieval --qid 17020
+python -m reviewproof.retrieval --product B00007E7C8 --query "Does it have volume control?"
+```
 
 ## 测试
 
