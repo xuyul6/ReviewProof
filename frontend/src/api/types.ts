@@ -83,6 +83,26 @@ export interface DoneEvent {
   persisted: boolean;
 }
 
+export interface SnapshotCandidate {
+  chunk_id: string;
+  review_id: string;
+  dense_rank: number | null;
+  dense_score: number | null;
+  bm25_rank: number | null;
+  bm25_score: number | null;
+  rrf_score: number | null;
+  rerank_score: number | null;
+}
+
+export interface RetrievalSnapshot {
+  query: string;
+  strategy: string;
+  mode: string;
+  service_status: ServiceStatus;
+  channels: { name: string; status: string; reason: string | null; latency_ms: number; hits: number }[];
+  candidates: SnapshotCandidate[];
+}
+
 export interface RunRecord {
   run_id: string;
   created_at: string;
@@ -93,6 +113,7 @@ export interface RunRecord {
   status: AnswerStatus | null;
   service_status: ServiceStatus;
   trace: TraceEvent[];
+  retrievals: RetrievalSnapshot[];
   [key: string]: unknown;
 }
 

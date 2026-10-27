@@ -284,6 +284,25 @@ class WorkflowTests(DatabaseTestCase):
         self.assertEqual((r.status, r.service_status), (None, "failed"))
         self.assertIn("OperationalError", r.trace[-1].detail)
 
+    def test_retrieval_snapshots_recorded(self):
+        r = self.ask({"QueryPlan": [plan("loud")], "EvidenceAssessment": [assess("answered", ["A-r00001-c00"])],
+                      "GeneratedAnswer": [generated(LOUD)]})
+        self.assertEqual(len(r.retrievals), 1)
+        snap = r.retrievals[0]
+        self.assertEqual((snap.query, snap.strategy, snap.service_status), ("loud", "hybrid", "ok"))
+        self.assertEqual(snap.candidates[0]["chunk_id"], "A-r00001-c00")
+        self.assertIsInstance(snap.candidates[0]["dense_rank"], int)
+        self.assertEqual(snap.candidates[0]["bm25_rank"], 1)
+        self.assertNotIn("text", snap.candidates[0])
+        self.assertEqual({c.name for c in snap.channels}, {"dense", "bm25", "rerank"})
+
+    def test_rewrite_adds_second_snapshot(self):
+        r = self.ask({"QueryPlan": [plan("noise")],
+                      "EvidenceAssessment": [assess("partial", ["C-r00000-c00"], ["battery"], rewrite="battery"),
+                                             assess("answered", ["C-r00000-c00"])],
+                      "GeneratedAnswer": [generated(("Loud at night.", ["C-r00000-c00"]))]}, product="C")
+        self.assertEqual([s.query for s in r.retrievals], ["noise", "battery"])
+
     def test_stream_yields_trace_then_result(self):
         llm = FakeLLM({"QueryPlan": [plan("loud")], "EvidenceAssessment": [assess("answered", ["A-r00001-c00"])],
                        "GeneratedAnswer": [generated(LOUD)]})
