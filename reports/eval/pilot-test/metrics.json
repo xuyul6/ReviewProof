@@ -1,0 +1,629 @@
+{
+  "config": {
+    "name": "pilot-test",
+    "split": "test",
+    "started_at": "2026-10-27T13:41:30+00:00",
+    "git_commit": "74094f18603505e6b09d76900d850ac90e90febd",
+    "dataset_id": "amazonqa-val-v1",
+    "source_sha256": "866095e6cce9abe5bc142e0ff1326737d57b5f24b19670123c6006d618bd941f",
+    "embedding_model": "BAAI/bge-m3",
+    "rerank_model": "BAAI/bge-reranker-v2-m3",
+    "llm_model": "claude-haiku-5-5",
+    "retrieval_params": {
+      "rrf_k": 60,
+      "channel_top_k": 50,
+      "rerank_pool": 40,
+      "evidence_k": 8,
+      "full_context_max_tokens": 6000
+    },
+    "max_rewrites": 1,
+    "seed": 20261027,
+    "questions_in_split": 528,
+    "sample": 50,
+    "systems": [
+      "workflow",
+      "b0_no_evidence",
+      "b1_full_context"
+    ],
+    "cost_note": "Claude Haiku 5.5 prices as of 2026-10-27; each call priced at its own tier (over 100k input tokens is long-context)"
+  },
+  "retrieval": {
+    "n_total": 528,
+    "n_included": 343,
+    "excluded": {
+      "full_context": 126,
+      "silver_unanswerable": 59
+    },
+    "mean_relevant": 10.653061224489797,
+    "errors": {
+      "bm25": 0,
+      "dense": 0,
+      "hybrid": 0,
+      "hybrid_rerank": 0
+    },
+    "variants": {
+      "bm25": {
+        "n": 343,
+        "recall@5": {
+          "mean": 0.2999411505242409,
+          "lo": 0.2857882965754686,
+          "hi": 0.3125657950730837,
+          "n": 343
+        },
+        "recall@10": {
+          "mean": 0.4877355233040364,
+          "lo": 0.46875680199295355,
+          "hi": 0.5049548766749933,
+          "n": 343
+        },
+        "recall@20": {
+          "mean": 0.6756419803067033,
+          "lo": 0.6555258961964501,
+          "hi": 0.6947876224844155,
+          "n": 343
+        },
+        "recall@40": {
+          "mean": 0.8205128366935948,
+          "lo": 0.8004634982769093,
+          "hi": 0.8387462068220085,
+          "n": 343
+        },
+        "hit@5": {
+          "mean": 0.9795918367346939,
+          "lo": 0.9650145772594753,
+          "hi": 0.9941690962099126,
+          "n": 343
+        },
+        "mrr@10": {
+          "mean": 0.8703387477439956,
+          "lo": 0.838876162709982,
+          "hi": 0.8955088157712064,
+          "n": 343
+        },
+        "ndcg@5": {
+          "mean": 0.6685940957628115,
+          "lo": 0.6398331218613593,
+          "hi": 0.6938015876713203,
+          "n": 343
+        }
+      },
+      "dense": {
+        "n": 343,
+        "recall@5": {
+          "mean": 0.16544558454179445,
+          "lo": 0.1524788622456261,
+          "hi": 0.1773433725328769,
+          "n": 343
+        },
+        "recall@10": {
+          "mean": 0.2589476930584802,
+          "lo": 0.2404956397667768,
+          "hi": 0.2757909081524242,
+          "n": 343
+        },
+        "recall@20": {
+          "mean": 0.4014701527821061,
+          "lo": 0.37786300191548006,
+          "hi": 0.4240817167930871,
+          "n": 343
+        },
+        "recall@40": {
+          "mean": 0.5740925498214128,
+          "lo": 0.5467108126729118,
+          "hi": 0.6003228954395136,
+          "n": 343
+        },
+        "hit@5": {
+          "mean": 0.8250728862973761,
+          "lo": 0.7871720116618076,
+          "hi": 0.8600583090379009,
+          "n": 343
+        },
+        "mrr@10": {
+          "mean": 0.6313538340506271,
+          "lo": 0.5890982923781758,
+          "hi": 0.6688416863343977,
+          "n": 343
+        },
+        "ndcg@5": {
+          "mean": 0.37932872433235865,
+          "lo": 0.3475498094777744,
+          "hi": 0.4060013303733837,
+          "n": 343
+        }
+      },
+      "hybrid": {
+        "n": 343,
+        "recall@5": {
+          "mean": 0.27148378832052306,
+          "lo": 0.2580642227872549,
+          "hi": 0.28413531722569624,
+          "n": 343
+        },
+        "recall@10": {
+          "mean": 0.4296321996759314,
+          "lo": 0.40901600828714535,
+          "hi": 0.4482222264292235,
+          "n": 343
+        },
+        "recall@20": {
+          "mean": 0.5966517204855397,
+          "lo": 0.5746626551291275,
+          "hi": 0.6174228751488227,
+          "n": 343
+        },
+        "recall@40": {
+          "mean": 0.79622450759477,
+          "lo": 0.7761327431881367,
+          "hi": 0.8143751130631597,
+          "n": 343
+        },
+        "hit@5": {
+          "mean": 0.9708454810495627,
+          "lo": 0.9533527696793003,
+          "hi": 0.9854227405247813,
+          "n": 343
+        },
+        "mrr@10": {
+          "mean": 0.8408036003517053,
+          "lo": 0.8081146744412051,
+          "hi": 0.8718901846452867,
+          "n": 343
+        },
+        "ndcg@5": {
+          "mean": 0.6125466310799181,
+          "lo": 0.583078698690893,
+          "hi": 0.6400233242751272,
+          "n": 343
+        }
+      },
+      "hybrid_rerank": {
+        "n": 343,
+        "recall@5": {
+          "mean": 0.2301696440909269,
+          "lo": 0.21723489500457432,
+          "hi": 0.24395829308365752,
+          "n": 343
+        },
+        "recall@10": {
+          "mean": 0.37669487946455876,
+          "lo": 0.3575365515598751,
+          "hi": 0.396719639285237,
+          "n": 343
+        },
+        "recall@20": {
+          "mean": 0.5707145704959117,
+          "lo": 0.5476618943091246,
+          "hi": 0.5929959091766672,
+          "n": 343
+        },
+        "recall@40": {
+          "mean": 0.79622450759477,
+          "lo": 0.7761327431881367,
+          "hi": 0.8143751130631597,
+          "n": 343
+        },
+        "hit@5": {
+          "mean": 0.9125364431486881,
+          "lo": 0.8833819241982507,
+          "hi": 0.9416909620991254,
+          "n": 343
+        },
+        "mrr@10": {
+          "mean": 0.7447047526493591,
+          "lo": 0.7123305104354667,
+          "hi": 0.7789323892822434,
+          "n": 343
+        },
+        "ndcg@5": {
+          "mean": 0.5174689955062358,
+          "lo": 0.48849028628851926,
+          "hi": 0.5462338692279892,
+          "n": 343
+        }
+      }
+    },
+    "hybrid_rerank_minus": {
+      "bm25": {
+        "hit@5": {
+          "mean": -0.06705539358600583,
+          "lo": -0.10204081632653061,
+          "hi": -0.03498542274052478,
+          "n": 343
+        },
+        "ndcg@5": {
+          "mean": -0.15112510025657572,
+          "lo": -0.18399584420186368,
+          "hi": -0.11915225741012579,
+          "n": 343
+        }
+      },
+      "dense": {
+        "hit@5": {
+          "mean": 0.08746355685131195,
+          "lo": 0.04956268221574344,
+          "hi": 0.13119533527696792,
+          "n": 343
+        },
+        "ndcg@5": {
+          "mean": 0.1381402711738771,
+          "lo": 0.1134826115538911,
+          "hi": 0.16701950321372444,
+          "n": 343
+        }
+      },
+      "hybrid": {
+        "hit@5": {
+          "mean": -0.05830903790087463,
+          "lo": -0.08746355685131195,
+          "hi": -0.029154518950437316,
+          "n": 343
+        },
+        "ndcg@5": {
+          "mean": -0.09507763557368235,
+          "lo": -0.12050373426580706,
+          "hi": -0.06934062772096088,
+          "n": 343
+        }
+      }
+    },
+    "hit@5_by_category": {
+      "Automotive": {
+        "bm25": {
+          "mean": 0.9864864864864865,
+          "lo": 0.9594594594594594,
+          "hi": 1.0,
+          "n": 74
+        },
+        "dense": {
+          "mean": 0.8378378378378378,
+          "lo": 0.7567567567567568,
+          "hi": 0.918918918918919,
+          "n": 74
+        },
+        "hybrid": {
+          "mean": 0.9864864864864865,
+          "lo": 0.9594594594594594,
+          "hi": 1.0,
+          "n": 74
+        },
+        "hybrid_rerank": {
+          "mean": 0.918918918918919,
+          "lo": 0.8513513513513513,
+          "hi": 0.972972972972973,
+          "n": 74
+        }
+      },
+      "Beauty": {
+        "bm25": {
+          "mean": 0.9642857142857143,
+          "lo": 0.9285714285714286,
+          "hi": 1.0,
+          "n": 84
+        },
+        "dense": {
+          "mean": 0.8333333333333334,
+          "lo": 0.75,
+          "hi": 0.9047619047619048,
+          "n": 84
+        },
+        "hybrid": {
+          "mean": 0.9642857142857143,
+          "lo": 0.9166666666666666,
+          "hi": 1.0,
+          "n": 84
+        },
+        "hybrid_rerank": {
+          "mean": 0.8809523809523809,
+          "lo": 0.8095238095238095,
+          "hi": 0.9404761904761905,
+          "n": 84
+        }
+      },
+      "Electronics": {
+        "bm25": {
+          "mean": 0.968421052631579,
+          "lo": 0.9263157894736842,
+          "hi": 1.0,
+          "n": 95
+        },
+        "dense": {
+          "mean": 0.8,
+          "lo": 0.7157894736842105,
+          "hi": 0.8736842105263158,
+          "n": 95
+        },
+        "hybrid": {
+          "mean": 0.9578947368421052,
+          "lo": 0.9157894736842105,
+          "hi": 0.9894736842105263,
+          "n": 95
+        },
+        "hybrid_rerank": {
+          "mean": 0.9052631578947369,
+          "lo": 0.8421052631578947,
+          "hi": 0.9578947368421052,
+          "n": 95
+        }
+      },
+      "Home_and_Kitchen": {
+        "bm25": {
+          "mean": 1.0,
+          "lo": 1.0,
+          "hi": 1.0,
+          "n": 90
+        },
+        "dense": {
+          "mean": 0.8333333333333334,
+          "lo": 0.7555555555555555,
+          "hi": 0.9,
+          "n": 90
+        },
+        "hybrid": {
+          "mean": 0.9777777777777777,
+          "lo": 0.9444444444444444,
+          "hi": 1.0,
+          "n": 90
+        },
+        "hybrid_rerank": {
+          "mean": 0.9444444444444444,
+          "lo": 0.8888888888888888,
+          "hi": 0.9888888888888889,
+          "n": 90
+        }
+      }
+    }
+  },
+  "answerability": {
+    "workflow": {
+      "n": 50,
+      "n_scored": 50,
+      "n_service_failed": 0,
+      "status_counts": {
+        "unanswerable": 12,
+        "answered": 25,
+        "partial": 13
+      },
+      "correct_refusal_rate": {
+        "mean": 0.6363636363636364,
+        "lo": 0.36363636363636365,
+        "hi": 0.9090909090909091,
+        "n": 11
+      },
+      "false_refusal_rate": {
+        "mean": 0.1282051282051282,
+        "lo": 0.02564102564102564,
+        "hi": 0.23076923076923078,
+        "n": 39
+      },
+      "answer_precision": 0.8947368421052632,
+      "answer_recall": 0.8717948717948718,
+      "answer_f1": {
+        "mean": 0.8831168831168831,
+        "lo": 0.8,
+        "hi": 0.9428571428571428,
+        "n": 50
+      },
+      "accuracy": {
+        "mean": 0.82,
+        "lo": 0.72,
+        "hi": 0.92,
+        "n": 50
+      },
+      "service_failure_reported_as_unanswerable": 0
+    },
+    "b0_no_evidence": {
+      "n": 50,
+      "n_scored": 50,
+      "n_service_failed": 0,
+      "status_counts": {
+        "unanswerable": 48,
+        "answered": 2
+      },
+      "correct_refusal_rate": {
+        "mean": 1.0,
+        "lo": 1.0,
+        "hi": 1.0,
+        "n": 11
+      },
+      "false_refusal_rate": {
+        "mean": 0.9487179487179487,
+        "lo": 0.8717948717948718,
+        "hi": 1.0,
+        "n": 39
+      },
+      "answer_precision": 1.0,
+      "answer_recall": 0.05128205128205128,
+      "answer_f1": {
+        "mean": 0.0975609756097561,
+        "lo": 0.0,
+        "hi": 0.22727272727272727,
+        "n": 50
+      },
+      "accuracy": {
+        "mean": 0.26,
+        "lo": 0.16,
+        "hi": 0.38,
+        "n": 50
+      },
+      "service_failure_reported_as_unanswerable": 0
+    },
+    "b1_full_context": {
+      "n": 44,
+      "n_scored": 44,
+      "n_service_failed": 0,
+      "status_counts": {
+        "unanswerable": 12,
+        "answered": 20,
+        "partial": 12
+      },
+      "correct_refusal_rate": {
+        "mean": 0.8571428571428571,
+        "lo": 0.5714285714285714,
+        "hi": 1.0,
+        "n": 7
+      },
+      "false_refusal_rate": {
+        "mean": 0.16216216216216217,
+        "lo": 0.05405405405405406,
+        "hi": 0.2972972972972973,
+        "n": 37
+      },
+      "answer_precision": 0.96875,
+      "answer_recall": 0.8378378378378378,
+      "answer_f1": {
+        "mean": 0.8985507246376812,
+        "lo": 0.8135593220338984,
+        "hi": 0.96,
+        "n": 44
+      },
+      "accuracy": {
+        "mean": 0.8409090909090909,
+        "lo": 0.7272727272727273,
+        "hi": 0.9318181818181818,
+        "n": 44
+      },
+      "service_failure_reported_as_unanswerable": 0
+    },
+    "workflow_b1_qids": {
+      "n": 44,
+      "n_scored": 44,
+      "n_service_failed": 0,
+      "status_counts": {
+        "unanswerable": 8,
+        "answered": 24,
+        "partial": 12
+      },
+      "correct_refusal_rate": {
+        "mean": 0.7142857142857143,
+        "lo": 0.2857142857142857,
+        "hi": 1.0,
+        "n": 7
+      },
+      "false_refusal_rate": {
+        "mean": 0.08108108108108109,
+        "lo": 0.0,
+        "hi": 0.16216216216216217,
+        "n": 37
+      },
+      "answer_precision": 0.9444444444444444,
+      "answer_recall": 0.918918918918919,
+      "answer_f1": {
+        "mean": 0.9315068493150684,
+        "lo": 0.8611111111111112,
+        "hi": 0.9859154929577465,
+        "n": 44
+      },
+      "accuracy": {
+        "mean": 0.8863636363636364,
+        "lo": 0.7954545454545454,
+        "hi": 0.9772727272727273,
+        "n": 44
+      },
+      "service_failure_reported_as_unanswerable": 0
+    }
+  },
+  "cost_latency": {
+    "workflow": {
+      "n": 50,
+      "cost_usd_total": 0.0469595,
+      "cost_usd_mean": 0.00093919,
+      "latency_ms_p50": 15172.529709059745,
+      "latency_ms_p95": 34394.77491599973,
+      "llm_calls_mean": 2.94,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    },
+    "b0_no_evidence": {
+      "n": 50,
+      "cost_usd_total": 0.0041971000000000005,
+      "cost_usd_mean": 8.3942e-05,
+      "latency_ms_p50": 1427.8787079965696,
+      "latency_ms_p95": 3081.7726250970736,
+      "llm_calls_mean": 1.0,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    },
+    "b1_full_context": {
+      "n": 44,
+      "cost_usd_total": 0.3360287,
+      "cost_usd_mean": 0.00763701590909091,
+      "latency_ms_p50": 7191.539083956741,
+      "latency_ms_p95": 11391.149208997376,
+      "llm_calls_mean": 2.522727272727273,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    },
+    "workflow_b1_qids": {
+      "n": 44,
+      "cost_usd_total": 0.0426533,
+      "cost_usd_mean": 0.0009693931818181817,
+      "latency_ms_p50": 16555.81799999345,
+      "latency_ms_p95": 34394.77491599973,
+      "llm_calls_mean": 3.0454545454545454,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    }
+  },
+  "failure_cases": {
+    "false_refusal": [
+      {
+        "qid": "1172",
+        "status": "unanswerable",
+        "answerable_silver": true,
+        "answer": "This question is outside what reviews can answer: This question asks for a comparison with other Nespresso models, which the product's reviews cannot reliably answer."
+      },
+      {
+        "qid": "39421",
+        "status": "unanswerable",
+        "answerable_silver": true,
+        "answer": "This question is outside what reviews can answer: Official product dimensions must come from the seller's product specifications, which I can't verify from customer reviews."
+      },
+      {
+        "qid": "42050",
+        "status": "unanswerable",
+        "answerable_silver": true,
+        "answer": "The reviews don't confirm this."
+      },
+      {
+        "qid": "81960",
+        "status": "unanswerable",
+        "answerable_silver": true,
+        "answer": "This question is outside what reviews can answer: Reviews cannot tell where to buy a replacement part; that information is outside the scope of customer reviews."
+      },
+      {
+        "qid": "88580",
+        "status": "unanswerable",
+        "answerable_silver": true,
+        "answer": "Verdict: Can't confirm\nThe reviews don't confirm this."
+      }
+    ],
+    "answered_silver_unanswerable": [
+      {
+        "qid": "12506",
+        "status": "answered",
+        "answerable_silver": false,
+        "answer": "The cooling pad has no controllable fan speed; one reviewer lists 'No Controllable Fan SpeedThe' as a con. [1]\nA reviewer says the product has no buttons, no lights, and no bells and whistles, which m"
+      },
+      {
+        "qid": "31069",
+        "status": "partial",
+        "answerable_silver": false,
+        "answer": "One reviewer measured all of the arms of the antenna at 31 inches each. [1]\nOne reviewer describes the antenna as having roughly 2-foot spokes extending in four directions. [2]\nOne reviewer reports th"
+      },
+      {
+        "qid": "50882",
+        "status": "partial",
+        "answerable_silver": false,
+        "answer": "Verdict: Yes\nOne reviewer says the duvet cover is very easy to clean and can simply be thrown in the wash. [1]\nOne reviewer says the cover has been much easier to wash, and notes that down comforters "
+      },
+      {
+        "qid": "77335",
+        "status": "answered",
+        "answerable_silver": false,
+        "answer": "Verdict: Can't confirm\nMultiple reviewers confirm the speaker is an exact, direct-fit replacement for the front door of a 2002 Silverado. [1][2][3]\nA reviewer with a 2001 Silverado reports the speaker"
+      }
+    ],
+    "errors": []
+  }
+}
