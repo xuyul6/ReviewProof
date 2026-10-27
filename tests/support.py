@@ -13,6 +13,7 @@ from psycopg.conninfo import conninfo_to_dict
 
 from reviewproof.db import ALL_TABLES, EMBEDDING_DIM, apply_schema, connect
 from reviewproof.ingest.amazonqa import Product, Review, review_id_for
+from reviewproof.retrieval.bm25 import tokenize
 
 TEST_DATABASE_URL = os.environ.get("REVIEWPROOF_TEST_DATABASE_URL")
 
@@ -81,6 +82,21 @@ def check_test_database_url(url: str) -> None:
         raise RuntimeError(
             f"REVIEWPROOF_TEST_DATABASE_URL must name a database ending in _test, got {dbname!r}; "
             "database tests truncate every table")
+
+
+class FakeReranker:
+    """Scores each text by how many query tokens it shares; can be told to fail."""
+
+    model_name = "fake-reranker"
+
+    def __init__(self, fail: bool = False):
+        self.fail = fail
+
+    def score(self, query: str, texts: Sequence[str]) -> list[float]:
+        if self.fail:
+            raise RuntimeError("FakeReranker failing")
+        terms = set(tokenize(query))
+        return [float(len(terms & set(tokenize(t)))) for t in texts]
 
 
 @unittest.skipUnless(TEST_DATABASE_URL, "set REVIEWPROOF_TEST_DATABASE_URL to run database tests")

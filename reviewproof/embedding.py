@@ -12,7 +12,7 @@ class Embedder(Protocol):
     def embed_query(self, text: str) -> list[float]: ...
 
 
-def _default_device() -> str:
+def default_device() -> str:
     """CUDA when present, otherwise CPU. Apple MPS is skipped on purpose: it keeps a compiled graph
     for every new batch shape and empty_cache() does not free them, so a BGE-M3 run grew ~0.2 GiB
     per batch and ran out of memory on a 16 GB Mac, while the CPU embedded just as fast."""
@@ -38,7 +38,7 @@ class SentenceTransformerEmbedder:
         if self._model is None:
             from sentence_transformers import SentenceTransformer
 
-            self._model = SentenceTransformer(self.model_name, device=self.device or _default_device())
+            self._model = SentenceTransformer(self.model_name, device=self.device or default_device())
         return self._model
 
     def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
