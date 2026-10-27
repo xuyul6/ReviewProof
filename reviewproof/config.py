@@ -12,6 +12,8 @@ class Settings:
     embedding_dim: int
     embedding_batch_size: int
     embedding_device: str | None = None  # None: CUDA if available, else CPU
+    rerank_model: str = "BAAI/bge-reranker-v2-m3"
+    full_context_max_tokens: int = 6000  # products at or under this use full context, not retrieval
 
 
 def _int(env: Mapping[str, str], name: str, default: int) -> int:
@@ -27,6 +29,9 @@ def _int(env: Mapping[str, str], name: str, default: int) -> int:
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     """Read settings from env (defaults to os.environ). Does not load .env files."""
     env = os.environ if env is None else env
+    full_context_max_tokens = _int(env, "REVIEWPROOF_FULL_CONTEXT_MAX_TOKENS", 6000)
+    if full_context_max_tokens < 0:
+        raise ValueError(f"REVIEWPROOF_FULL_CONTEXT_MAX_TOKENS must be >= 0, got {full_context_max_tokens}")
     return Settings(
         database_url=env.get(
             "REVIEWPROOF_DATABASE_URL",
@@ -36,4 +41,6 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         embedding_dim=_int(env, "REVIEWPROOF_EMBEDDING_DIM", 1024),
         embedding_batch_size=_int(env, "REVIEWPROOF_EMBEDDING_BATCH_SIZE", 32),
         embedding_device=env.get("REVIEWPROOF_EMBEDDING_DEVICE", "").strip() or None,
+        rerank_model=env.get("REVIEWPROOF_RERANK_MODEL", "BAAI/bge-reranker-v2-m3"),
+        full_context_max_tokens=full_context_max_tokens,
     )

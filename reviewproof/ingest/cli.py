@@ -15,7 +15,7 @@ from typing import Callable, Mapping, Sequence
 import psycopg
 
 from reviewproof.config import Settings, load_settings
-from reviewproof.db import EMBEDDING_DIM, apply_schema, connect
+from reviewproof.db import EMBEDDING_DIM, apply_schema, connect, embedding_column_dim
 from reviewproof.embedding import Embedder, SentenceTransformerEmbedder
 from reviewproof.ingest.amazonqa import file_sha256, load_products, load_questions
 from reviewproof.ingest.embed import embed_pending_chunks
@@ -41,12 +41,13 @@ def progress_printer(every: int = 20) -> Callable[[int, int], None]:
     return report
 
 
-def verify_ingest(conn: psycopg.Connection, manifest: Mapping, require_embeddings: bool) -> dict:
+def verify_ingest(conn: psycopg.Connection, manifest: Mapping, require_embeddings: bool, embedding_model: str) -> dict:
+    """Counts chunks with no vector, or a vector from a model other than embedding_model, as missing."""
     ids = [p["product_id"] for p in manifest["products"]]
     present = {r[0] for r in conn.execute("SELECT product_id FROM products WHERE product_id = ANY(%s)", (ids,))}
 
-    def count(sql: str) -> int:
-        return conn.execute(sql, (ids,)).fetchone()[0]
+    def count(sql: str, *extra) -> int:
+        return conn.execute(sql, (ids, *extra)).fetchone()[0]
 
     report = {
         "products": len(present),
@@ -54,7 +55,8 @@ def verify_ingest(conn: psycopg.Connection, manifest: Mapping, require_embedding
         "reviews": count("SELECT count(*) FROM reviews WHERE product_id = ANY(%s)"),
         "chunks": count("SELECT count(*) FROM chunks WHERE product_id = ANY(%s)"),
         "chunks_without_embedding": count(
-            "SELECT count(*) FROM chunks WHERE product_id = ANY(%s) AND embedding IS NULL"),
+            "SELECT count(*) FROM chunks WHERE product_id = ANY(%s)"
+            " AND (embedding IS NULL OR embedding_model IS DISTINCT FROM %s)", embedding_model),
         "questions": count("SELECT count(*) FROM questions WHERE product_id = ANY(%s)"),
     }
     conn.rollback()
@@ -98,13 +100,21 @@ def main(
     conn = connect(settings.database_url)
     try:
         apply_schema(conn)
+        column_dim = embedding_column_dim(conn)
+        if column_dim != EMBEDDING_DIM:
+            print(f"chunks.embedding is vector({column_dim}) but the code expects vector({EMBEDDING_DIM})",
+                  file=sys.stderr)
+            return 2
         load_report = load_dataset(conn, manifest, products, questions)
         embedded = 0
+        embedding_model = settings.embedding_model
         if not args.skip_embeddings:
             embedder = (embedder_factory or default_embedder)(settings)
+            embedding_model = embedder.model_name
             embedded = embed_pending_chunks(
                 conn, embedder, settings.embedding_batch_size, product_ids=ids, on_batch=progress_printer())
-        verify = verify_ingest(conn, manifest, require_embeddings=not args.skip_embeddings)
+        verify = verify_ingest(conn, manifest, require_embeddings=not args.skip_embeddings,
+                               embedding_model=embedding_model)
     finally:
         conn.close()
 

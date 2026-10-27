@@ -18,6 +18,16 @@ class SettingsTests(unittest.TestCase):
         self.assertIsNone(load_settings({"REVIEWPROOF_EMBEDDING_DEVICE": " "}).embedding_device)
         self.assertEqual(load_settings({"REVIEWPROOF_EMBEDDING_DEVICE": "mps"}).embedding_device, "mps")
 
+    def test_retrieval_defaults_and_overrides(self):
+        s = load_settings({})
+        self.assertEqual((s.rerank_model, s.full_context_max_tokens), ("BAAI/bge-reranker-v2-m3", 6000))
+        s = load_settings({"REVIEWPROOF_RERANK_MODEL": "m", "REVIEWPROOF_FULL_CONTEXT_MAX_TOKENS": "0"})
+        self.assertEqual((s.rerank_model, s.full_context_max_tokens), ("m", 0))
+
+    def test_negative_threshold_rejected(self):
+        with self.assertRaisesRegex(ValueError, "REVIEWPROOF_FULL_CONTEXT_MAX_TOKENS"):
+            load_settings({"REVIEWPROOF_FULL_CONTEXT_MAX_TOKENS": "-1"})
+
     def test_bad_int_names_the_variable(self):
         with self.assertRaisesRegex(ValueError, "REVIEWPROOF_EMBEDDING_DIM"):
             load_settings({"REVIEWPROOF_EMBEDDING_DIM": "abc"})

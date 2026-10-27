@@ -1,6 +1,6 @@
 import unittest
 
-from reviewproof.db import ALL_TABLES, EMBEDDING_DIM, apply_schema
+from reviewproof.db import ALL_TABLES, EMBEDDING_DIM, apply_schema, embedding_column_dim
 from tests.support import DatabaseTestCase
 
 
@@ -10,6 +10,9 @@ class SchemaTests(DatabaseTestCase):
         names = {r[0] for r in self.conn.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")}
         self.assertTrue(set(ALL_TABLES) <= names)
+
+    def test_embedding_column_dim_matches_schema(self):
+        self.assertEqual(embedding_column_dim(self.conn), EMBEDDING_DIM)
 
     def test_vector_extension_and_dimension(self):
         self.assertEqual(

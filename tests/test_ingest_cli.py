@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from reviewproof.ingest.amazonqa import file_sha256
 from reviewproof.config import load_settings
+from reviewproof.db import EMBEDDING_DIM, connect
 from reviewproof.ingest.cli import default_embedder, main, verify_ingest
 from tests.support import TEST_DATABASE_URL, DatabaseTestCase, FakeEmbedder, write_jsonl
 
@@ -97,7 +98,7 @@ class IngestCliDatabaseTests(IngestFixture, DatabaseTestCase):
         summary = json.loads(out)
         self.assertEqual(summary["load"], {"products": 2, "reviews": 3, "chunks": 3, "questions": 1})
         self.assertEqual(summary["embedded"], 3)
-        report = verify_ingest(self.conn, self.manifest, require_embeddings=True)
+        report = verify_ingest(self.conn, self.manifest, require_embeddings=True, embedding_model="fake")
         self.assertEqual(report, {"products": 2, "missing_products": [], "reviews": 3, "chunks": 3,
                                   "chunks_without_embedding": 0, "questions": 1, "ok": True})
 
@@ -106,6 +107,24 @@ class IngestCliDatabaseTests(IngestFixture, DatabaseTestCase):
         self.assertEqual(code, 0)
         self.assertIn("embedded 3/3 pending chunks", err)
         self.assertEqual(json.loads(out)["embedded"], 3)
+
+    def test_verify_counts_vectors_from_another_model_as_missing(self):
+        self.run_main(["--manifest", str(self.manifest_path)], {"REVIEWPROOF_DATABASE_URL": TEST_DATABASE_URL})
+        report = verify_ingest(self.conn, self.manifest, require_embeddings=True, embedding_model="other")
+        self.assertEqual((report["chunks_without_embedding"], report["ok"]), (3, False))
+
+    def test_ingest_refuses_database_with_other_dim(self):
+        self.conn.execute("ALTER TABLE chunks ALTER COLUMN embedding TYPE vector(8)")
+        self.conn.commit()
+        self.addCleanup(self._restore_dim)
+        code, _, err = self.run_main(["--manifest", str(self.manifest_path)], {"REVIEWPROOF_DATABASE_URL": TEST_DATABASE_URL})
+        self.assertEqual(code, 2)
+        self.assertIn("vector(8)", err)
+
+    def _restore_dim(self):  # cleanups run after tearDown closed self.conn
+        with connect(TEST_DATABASE_URL) as conn:
+            conn.execute("TRUNCATE chunks CASCADE")
+            conn.execute(f"ALTER TABLE chunks ALTER COLUMN embedding TYPE vector({EMBEDDING_DIM})")
 
     def test_second_run_embeds_nothing(self):
         self.run_main(["--manifest", str(self.manifest_path)], {"REVIEWPROOF_DATABASE_URL": TEST_DATABASE_URL})
@@ -119,7 +138,7 @@ class IngestCliDatabaseTests(IngestFixture, DatabaseTestCase):
         self.assertEqual(json.loads(out)["verify"]["chunks_without_embedding"], 3)
 
     def test_verify_reports_missing_products(self):
-        report = verify_ingest(self.conn, self.manifest, require_embeddings=False)
+        report = verify_ingest(self.conn, self.manifest, require_embeddings=False, embedding_model="fake")
         self.assertEqual((report["missing_products"], report["ok"]), (["A", "B"], False))
 
 
