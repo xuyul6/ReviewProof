@@ -56,7 +56,7 @@
 | **1 数据底座** | 抽样的 100 件商品进入数据库，带向量 | `reviewproof/` 骨架、配置、Docker Compose、CI；抽样清单 `samples/manifest_v1.json`；AmazonQA 读取与合并；切分；建表与写库；BGE-M3 向量化；导入命令 | 一条命令完成导入；每个块都有向量；重复导入不产生重复数据；问题、回答、标签只在 `questions` 表 |
 | **2 混合检索** | 给定商品和问题，返回带分数的证据候选 | `reviewproof/retrieval/`：稠密、BM25、RRF、重排、策略选择、通道状态；命令行查看排序结果 | 两路结果都只来自该商品；单路故障时另一路继续，并记录降级；评论少的商品走全量上下文 |
 | **3 LangGraph 工作流** | 从问题到带引用的三态回答 | `reviewproof/workflow/`：状态、节点、图；`reviewproof/llm.py`（参照旧文件夹里已换成 Claude 的 `bridge/core/llm_client.py` 重写） | 输出三态之一；所有引用都来自本商品的候选；改写最多 1 次；服务故障和"评论无法确认"分开；每个分支都有离线测试 |
-| **4 接口和界面** | 能演示的完整系统 | `reviewproof/api/`：`GET /v1/products`、`POST /v1/qa`（SSE）、`GET /v1/runs/{id}`、`GET /v1/evidence/{review_id}`；`qa_runs` 表；Streamlit 界面；MCP Server 用新检索 | 页面上能选商品、提问、查看引用和运行详情；测试全部通过 |
+| **4 接口和界面** | 能演示的完整系统 | `reviewproof/api/`：`GET /v1/products`、`POST /v1/qa`（SSE）、`GET /v1/runs/{id}`、`GET /v1/evidence/{review_id}`；`qa_runs` 表；Vue 3 前端（`frontend/`，由 FastAPI 同源提供）；MCP Server 用新检索 | 页面上能选商品、提问、查看引用和运行详情；测试全部通过 |
 | **5 评测体系** | 用数字说明系统好不好 | `reviewproof/eval/`：题集、片段到评论的对齐（生成候选 qrels）、人工标注导出导入、评测运行器（BM25、稠密、混合、+重排、全量上下文、完整工作流、无检索 B0）、指标与报告；在 dev 集调自适应阈值 | 同一数据、同一命令可以复跑；报告带置信区间和失败案例；**需要人工标注约 200 题** |
 | **6 可答性模型** | 让核心卖点有模型和数据支撑 | 下载 `train-qar.jsonl`（下载前先确认大小）；构造训练集；微调交叉编码器；在金标 dev 集上校准阈值；接入证据评估节点 | 在金标 test 集上与 LLM 评估、AmazonQA 自带分类器对比，并写进报告 |
 | **7 收尾** | 别人能一键跑起来 | Docker Compose 启动全栈；README、技术报告；决定是否公开仓库 | 全新环境按 README 能跑通 |
@@ -72,7 +72,7 @@
 | `bridge/core/llm_client.py`（Claude Haiku 5.5 版本只在旧文件夹的 `phase-1-data` 分支上，没有推送到 GitHub） | 第 3 阶段写 `reviewproof/llm.py` |
 | `bridge/demo_qa.py`（逐条引用、三态答案、运行记录） | 第 3、4 阶段 |
 | `bridge/graph/*`（旧 LangGraph 工作流和多级降级） | 第 3 阶段 |
-| `bridge/mcp_server.py`、`app/api/main.py`、`app/streamlit_app.py` | 第 4 阶段 |
+| `bridge/mcp_server.py`、`app/api/main.py` | 第 4 阶段 |
 | `scripts/evaluate_retrieval.py`（检索指标计算） | 第 5 阶段 |
 
 ## 5. 推迟或不做
