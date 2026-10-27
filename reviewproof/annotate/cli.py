@@ -101,7 +101,9 @@ def _import_drafts(conn, args) -> int:
             qid = f"{path}:{line_no}"
             try:
                 row = json.loads(line)
-                qid = row["qid"]
+                if not isinstance(row, dict):
+                    raise LabelError("each line must be a JSON object")
+                qid = str(row["qid"])
                 save_label(conn, args.set, Label(qid=qid, source="draft", answerability=row["answerability"],
                                                  verdict=row.get("verdict"), grades=row["grades"],
                                                  rationale=row["rationale"], annotator=row["annotator"]))

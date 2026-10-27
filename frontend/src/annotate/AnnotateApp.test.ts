@@ -1,5 +1,5 @@
 import { flushPromises, mount } from "@vue/test-utils";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AnnotationClient, AnnotationItem, ItemSummary } from "../api/annotation";
 import { ApiError } from "../api/client";
 import AnnotateApp from "./AnnotateApp.vue";
@@ -40,7 +40,75 @@ async function mountWith(client: AnnotationClient) {
 
 const drafted = (qid: string, blind = false): ItemSummary => ({ qid, split: "dev", blind, status: "drafted" });
 
+const ctrlEnter = (init: KeyboardEventInit = {}) =>
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, ...init }));
+
 describe("AnnotateApp", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("ignores Ctrl+Enter while busy, on key repeat, and right after an item opens", async () => {
+    let now = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => now);
+    const hidden = item("q3", { blind: true, draft_hidden: true, labels: {} });
+    let resolveBlind: (v: AnnotationItem) => void = () => {};
+    const client = fakeClient([drafted("q3", true)], {
+      item: vi.fn(async () => hidden),
+      blind: vi.fn(() => new Promise<AnnotationItem>((r) => { resolveBlind = r; })),
+    });
+    const wrapper = await mountWith(client);
+    now = 10_000;
+    await wrapper.find('[data-test="ans-partial"]').trigger("click");
+    await wrapper.find('[data-test="verdict-mixed"]').trigger("click");
+    ctrlEnter();
+    ctrlEnter(); // still busy with the blind submit
+    resolveBlind(item("q3", { blind: true }));
+    await flushPromises();
+    ctrlEnter({ repeat: true }); // held key
+    ctrlEnter(); // a second tap right after the draft appears
+    await flushPromises();
+    expect(client.blind).toHaveBeenCalledTimes(1);
+    expect(client.final).not.toHaveBeenCalled();
+    now += 1_000;
+    ctrlEnter();
+    await flushPromises();
+    expect(client.final).toHaveBeenCalledTimes(1);
+  });
+
+  it("number keys with a modifier do not change answerability", async () => {
+    const wrapper = await mountWith(fakeClient([drafted("q1")]));
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "3", metaKey: true }));
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "3", ctrlKey: true }));
+    await flushPromises();
+    expect(wrapper.find('[data-test="ans-answered"]').classes()).toContain("active");
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "3" }));
+    await flushPromises();
+    expect(wrapper.find('[data-test="ans-unanswerable"]').classes()).toContain("active");
+  });
+
+  it("an item without a draft shows every chunk unfolded", async () => {
+    const client = fakeClient([{ ...drafted("q1"), status: "pending" }], { item: vi.fn(async () => item("q1", { labels: {} })) });
+    const wrapper = await mountWith(client);
+    expect(wrapper.text()).not.toContain("预标为无关");
+    expect(wrapper.find("details .chunk-grader").exists()).toBe(false);
+    expect(wrapper.find('[data-test="grade-c2-0"]').exists()).toBe(true);
+  });
+
+  it("Ctrl+Enter in the search box saves without searching", async () => {
+    let now = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => now);
+    const client = fakeClient([drafted("q1")]);
+    const wrapper = await mountWith(client);
+    now = 10_000;
+    const input = wrapper.find('[data-test="search-input"]');
+    await input.setValue("quiet");
+    await input.trigger("keydown", { key: "Enter", ctrlKey: true });
+    await flushPromises();
+    expect(client.search).not.toHaveBeenCalled();
+    await input.trigger("keydown", { key: "Enter" });
+    await flushPromises();
+    expect(client.search).toHaveBeenCalledTimes(1);
+  });
+
   it("hides the draft until the blind label is submitted", async () => {
     const hidden = item("q3", { blind: true, draft_hidden: true, labels: {} });
     const revealed = item("q3", { blind: true });

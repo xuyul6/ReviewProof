@@ -104,6 +104,23 @@ class AnnotateCliTests(DatabaseTestCase):
         self.assertEqual(get_item(self.conn, "g", "qa")["labels"]["draft"]["source"], "draft")
         self.assertEqual(get_item(self.conn, "g", "qc")["labels"], {})
 
+    def test_import_drafts_survives_malformed_shapes(self):
+        self.pick()
+        pool_a = [c["chunk_id"] for c in get_item(self.conn, "g", "qa")["pool"]]
+        grades = dict({c: 0 for c in pool_a}, **{pool_a[1]: 2})
+        base = {"answerability": "answered", "verdict": "yes", "rationale": "r", "annotator": "agent:t"}
+        path = self.root / "shapes.jsonl"
+        path.write_text("\n".join(json.dumps(r) for r in (
+            dict(base, qid="qa", grades=list(grades)),
+            dict(base, qid="qa", grades=grades, rationale=None),
+            dict(base, qid="qa", grades=dict(grades, **{pool_a[0]: True})),
+            "not an object",
+        )) + "\n" + '{"qid": 12345, "answerability": "answered"}\n')
+        code, out, err = self.run_main(["import-drafts", "--set", "g", str(path)])
+        self.assertEqual(code, 1, err)
+        self.assertIn("accepted 0, rejected 5", out)
+        self.assertEqual(get_item(self.conn, "g", "qa")["labels"], {})
+
     def test_search_excludes_pool_and_other_products(self):
         hits = search_product(self.conn, "C", "office", BM25Cache(), exclude={"C-r00000-c00"})
         self.assertEqual([h["chunk_id"] for h in hits], ["C-r00006-c00"])

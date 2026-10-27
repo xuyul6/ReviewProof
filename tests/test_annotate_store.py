@@ -115,6 +115,21 @@ class AnnotationStoreTests(DatabaseTestCase):
         self.conn.rollback()
         self.assertIn("draft", get_item(self.conn, "gold_v1", "qa")["labels"])
 
+    def test_draft_cannot_be_replaced_after_human_labels(self):
+        save_label(self.conn, "gold_v1", label())
+        save_label(self.conn, "gold_v1", label(rationale="corrected draft"))  # still only a draft: allowed
+        save_label(self.conn, "gold_v1", label(source="final", annotator="human"))
+        with self.assertRaises(LabelError):
+            save_label(self.conn, "gold_v1", label(rationale="late draft"))
+        self.assertEqual(get_item(self.conn, "gold_v1", "qa")["labels"]["draft"]["rationale"], "corrected draft")
+
+    def test_malformed_label_values_rejected(self):
+        two = dict(ALL_ZERO, **{"A-r00001-c00": 2})
+        for bad in (label(grades=dict(two, **{"A-r00000-c00": True})), label(rationale=None),
+                    label(grades=list(two))):
+            with self.subTest(bad=bad), self.assertRaises(LabelError):
+                save_label(self.conn, "gold_v1", bad)
+
     def test_add_items_with_unknown_qid_refused(self):
         with self.assertRaises(LabelError):
             add_items(self.conn, "gold_v2", [ItemSpec("qa", "dev", False, POOL), ItemSpec("nope", "dev", False, ())])

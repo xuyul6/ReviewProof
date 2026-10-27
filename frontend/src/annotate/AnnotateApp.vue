@@ -26,6 +26,9 @@ const searchQuery = ref("");
 const searchHits = ref<PoolChunk[]>([]);
 const error = ref("");
 const busy = ref(false);
+// Ctrl+Enter is ignored this long after an item opens, so a double tap cannot accept a draft unseen.
+const SAVE_GUARD_MS = 500;
+let openedAt = 0;
 
 const blindMode = computed(() => current.value?.draft_hidden ?? false);
 const isYesNo = computed(() => current.value?.question_type === "yesno");
@@ -41,6 +44,7 @@ function message(e: unknown): string {
 
 function fill(item: AnnotationItem) {
   current.value = item;
+  openedAt = performance.now();
   error.value = "";
   searchHits.value = [];
   searchQuery.value = "";
@@ -60,8 +64,9 @@ function fill(item: AnnotationItem) {
     ...item.extra_chunks.filter((c) => c.chunk_id in base).map((c) => [c.chunk_id, base[c.chunk_id]]),
   ]) as Record<string, Grade>;
   extras.value = item.extra_chunks.filter((c) => c.chunk_id in base);
-  // Order is fixed when the item opens, so chunks do not jump around while grading.
-  prominent.value = new Set(item.pool.filter((c) => (base[c.chunk_id] ?? 0) >= 1).map((c) => c.chunk_id));
+  // Order is fixed when the item opens, so chunks do not jump around while grading. Without a
+  // draft nothing was judged irrelevant yet, so every chunk stays unfolded.
+  prominent.value = new Set(item.pool.filter((c) => !source || (base[c.chunk_id] ?? 0) >= 1).map((c) => c.chunk_id));
   if (source) {
     answerability.value = source.answerability;
     verdict.value = source.verdict;
@@ -98,7 +103,7 @@ function choose(value: Answerability) {
 }
 
 async function submitBlind() {
-  if (!current.value || !answerability.value) return;
+  if (busy.value || !current.value || !answerability.value) return;
   busy.value = true;
   try {
     fill(await api.blind(props.labelSet, current.value.qid, answerability.value, isYesNo.value ? verdict.value : null));
@@ -111,7 +116,7 @@ async function submitBlind() {
 }
 
 async function saveAndNext() {
-  if (!current.value || !answerability.value || blindMode.value) return;
+  if (busy.value || !current.value || !answerability.value || blindMode.value) return;
   busy.value = true;
   const qid = current.value.qid;
   try {
@@ -155,10 +160,12 @@ function onKey(event: KeyboardEvent) {
   const target = event.target as HTMLElement | null;
   if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
     event.preventDefault();
+    if (event.repeat || busy.value || performance.now() - openedAt < SAVE_GUARD_MS) return;
     if (blindMode.value) void submitBlind();
     else void saveAndNext();
     return;
   }
+  if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
   if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
   const index = ["1", "2", "3"].indexOf(event.key);
   if (index >= 0 && current.value) choose(ANSWERABILITY[index][0]);
@@ -234,7 +241,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
           </details>
           <div class="row search">
             <input v-model="searchQuery" class="grow" placeholder="在这件商品的全部评论里搜索" data-test="search-input"
-                   @keydown.enter="runSearch" />
+                   @keydown.enter.exact="runSearch" />
             <button type="button" data-test="search-go" @click="runSearch">搜索</button>
           </div>
           <div v-for="c in searchHits" :key="c.chunk_id" class="search-hit">

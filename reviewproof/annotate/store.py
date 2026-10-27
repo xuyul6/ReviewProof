@@ -43,6 +43,11 @@ def validate_label(label: Label, *, pool: Sequence[str], product_chunk_ids: Abst
                    question_type: str) -> None:
     if label.source not in SOURCES:
         raise LabelError(f"unknown source {label.source!r}")
+    if not isinstance(label.rationale, str):
+        raise LabelError("rationale must be text")
+    if not isinstance(label.grades, Mapping) or any(
+            not isinstance(cid, str) or type(g) is not int for cid, g in label.grades.items()):
+        raise LabelError("grades must be an object mapping chunk ids to 0, 1 or 2")
     if label.answerability not in ANSWERABILITY:
         raise LabelError(f"answerability must be one of {ANSWERABILITY}, got {label.answerability!r}")
     if question_type == "yesno":
@@ -151,6 +156,8 @@ def save_label(conn: psycopg.Connection, label_set: str, label: Label) -> None:
                 raise LabelError(f"{label.qid} is not a blind item")
             if "blind" in existing:
                 raise LabelError(f"{label.qid} already has its blind label")
+        if label.source == "draft" and ("blind" in existing or "final" in existing):
+            raise LabelError(f"{label.qid}: human labels exist, the draft they were compared with cannot change")
         if label.source == "final" and blind and "blind" not in existing:
             raise LabelError(f"{label.qid} is a blind item: submit the blind label first")
         conn.execute(
