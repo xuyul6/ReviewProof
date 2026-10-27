@@ -12,6 +12,12 @@ anthropic>=2.3,<3
 langgraph>=1.2,<2
 pydantic>=2.8,<3
 
+# API and MCP server
+fastapi>=0.162,<1
+uvicorn[standard]>=0.54,<1
+httpx>=0.28,<1
+mcp>=2.3,<3
+
 # Database
 psycopg[binary]>=3.2,<4
 pgvector>=0.3,<1

@@ -139,3 +139,17 @@ class DatabaseTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
+
+
+def make_test_services(llm=None):
+    """API services on the test database with fake models; no warm-up, no real LLM."""
+    from reviewproof.api.services import Services
+    from reviewproof.config import load_settings
+    from reviewproof.retrieval import RetrievalParams
+    from reviewproof.retrieval.bm25 import BM25Cache
+    from reviewproof.workflow.state import RetrievalDeps
+
+    settings = load_settings({"REVIEWPROOF_DATABASE_URL": TEST_DATABASE_URL or ""})
+    retrieval = RetrievalDeps(embedder=FakeEmbedder(), embedding_model="fake", reranker=FakeReranker(),
+                              bm25_cache=BM25Cache(), params=RetrievalParams())
+    return Services(settings=settings, llm=llm or FakeLLM({}), retrieval=retrieval)
