@@ -6,13 +6,14 @@ import json
 import os
 import unittest
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence
 
 import numpy as np
 from psycopg.conninfo import conninfo_to_dict
 
 from reviewproof.db import ALL_TABLES, EMBEDDING_DIM, apply_schema, connect
 from reviewproof.ingest.amazonqa import Product, Review, review_id_for
+from reviewproof.llm import LLMResult
 from reviewproof.retrieval.bm25 import tokenize
 
 TEST_DATABASE_URL = os.environ.get("REVIEWPROOF_TEST_DATABASE_URL")
@@ -86,6 +87,28 @@ def check_test_database_url(url: str) -> None:
         raise RuntimeError(
             f"REVIEWPROOF_TEST_DATABASE_URL must name a database ending in _test, got {dbname!r}; "
             "database tests truncate every table")
+
+
+class FakeLLM:
+    """Scripted LLM: each call takes the next item for schema.__name__ (an output, an exception
+    to raise, or a callable taking the prompt) and records (schema name, system, prompt)."""
+
+    model_name = "fake-llm"
+
+    def __init__(self, script: Mapping[str, Sequence[object]]):
+        self.script = {name: list(items) for name, items in script.items()}
+        self.calls: list[tuple[str, str, str]] = []
+
+    def structured(self, *, system: str, prompt: str, schema):
+        name = schema.__name__
+        self.calls.append((name, system, prompt))
+        if not self.script.get(name):
+            raise AssertionError(f"FakeLLM has no scripted {name} left")
+        item = self.script[name].pop(0)
+        if isinstance(item, Exception):
+            raise item
+        output = item(prompt) if callable(item) else item
+        return LLMResult(output, 10, 5, 1.0)
 
 
 class FakeReranker:

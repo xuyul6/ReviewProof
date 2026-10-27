@@ -7,6 +7,11 @@ sentence-transformers>=3.0.1,<4.0.0
 # Retrieval
 rank-bm25>=0.2.2,<1
 
+# Answer generation and the QA workflow
+anthropic>=2.3,<3
+langgraph>=1.2,<2
+pydantic>=2.8,<3
+
 # Database
 psycopg[binary]>=3.2,<4
 pgvector>=0.3,<1

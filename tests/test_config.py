@@ -28,6 +28,16 @@ class SettingsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "REVIEWPROOF_FULL_CONTEXT_MAX_TOKENS"):
             load_settings({"REVIEWPROOF_FULL_CONTEXT_MAX_TOKENS": "-1"})
 
+    def test_llm_defaults_and_validation(self):
+        s = load_settings({})
+        self.assertEqual((s.llm_model, s.llm_effort, s.max_rewrites), ("claude-haiku-5-5", "low", 1))
+        s = load_settings({"REVIEWPROOF_LLM_EFFORT": "high", "REVIEWPROOF_MAX_REWRITES": "0"})
+        self.assertEqual((s.llm_effort, s.max_rewrites), ("high", 0))
+        with self.assertRaisesRegex(ValueError, "REVIEWPROOF_LLM_EFFORT"):
+            load_settings({"REVIEWPROOF_LLM_EFFORT": "max"})
+        with self.assertRaisesRegex(ValueError, "REVIEWPROOF_MAX_REWRITES"):
+            load_settings({"REVIEWPROOF_MAX_REWRITES": "3"})
+
     def test_bad_int_names_the_variable(self):
         with self.assertRaisesRegex(ValueError, "REVIEWPROOF_EMBEDDING_DIM"):
             load_settings({"REVIEWPROOF_EMBEDDING_DIM": "abc"})
