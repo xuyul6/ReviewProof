@@ -37,12 +37,11 @@ class VerifyClaimsTests(unittest.TestCase):
 class FinalStatusTests(unittest.TestCase):
     def test_rules(self):
         one = [AnswerClaim("x", (1,))]
-        self.assertEqual(final_status("answered", one, []), "answered")
-        self.assertEqual(final_status("answered", one, ["size"]), "partial")
-        self.assertEqual(final_status("partial", one, []), "partial")
-        self.assertEqual(final_status("partial", [], []), "unanswerable")
-        self.assertEqual(final_status("answered", [], []), "unanswerable")
-        self.assertEqual(final_status("unanswerable", one, []), "unanswerable")
+        self.assertEqual(final_status("answered", one), "answered")
+        self.assertEqual(final_status("partial", one), "partial")
+        self.assertEqual(final_status("partial", []), "unanswerable")
+        self.assertEqual(final_status("answered", []), "unanswerable")
+        self.assertEqual(final_status("unanswerable", one), "unanswerable")
 
 
 class RenderTests(unittest.TestCase):

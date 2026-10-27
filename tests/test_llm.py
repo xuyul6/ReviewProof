@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import anthropic
 import httpx2
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from reviewproof.llm import ClaudeLLM, LLMError
 from tests.support import FakeLLM
@@ -65,6 +65,15 @@ class ClaudeLLMTests(unittest.TestCase):
     def test_sdk_errors_become_llm_error(self):
         error = anthropic.APIConnectionError(request=httpx2.Request("POST", "https://api.anthropic.com/v1/messages"))
         with self.assertRaisesRegex(LLMError, "APIConnectionError"):
+            ClaudeLLM(client=FakeAnthropic(error=error)).structured(system="s", prompt="p", schema=Answer)
+
+    def test_schema_validation_error_becomes_llm_error(self):
+        # messages.parse validates eagerly; a reply cut off mid-JSON raises pydantic's ValidationError.
+        try:
+            Answer.model_validate_json('{"text": "cut of')
+        except ValidationError as exc:
+            error = exc
+        with self.assertRaisesRegex(LLMError, "invalid structured output"):
             ClaudeLLM(client=FakeAnthropic(error=error)).structured(system="s", prompt="p", schema=Answer)
 
     def test_missing_key_is_llm_error_not_type_error(self):

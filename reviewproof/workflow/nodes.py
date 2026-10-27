@@ -103,13 +103,19 @@ class WorkflowNodes:
             return update
         known = {c.chunk.chunk_id for c in state["candidates"]}
         new = [c for c in result.candidates if c.chunk.chunk_id not in known]
+        # Each rewrite may add up to evidence_k chunks, so a second rewrite can still add evidence.
+        limit = self.retrieval.params.evidence_k * (update["rewrites_used"] + 1)
+        merged = (state["candidates"] + new)[:limit]
+        added = len(merged) - len(state["candidates"])
+        status = "degraded" if result.service_status == "degraded" else "ok"
         update["retrieval_modes"] = [result.mode]
-        if not new:
-            update["trace"] = [TraceEntry("rewrite", "ok", f"query={query!r}; no_new_evidence", _ms(start))]
+        if status == "degraded":
+            update["degraded"] = True
+        if added <= 0:
+            update["trace"] = [TraceEntry("rewrite", status, f"query={query!r}; no_new_evidence", _ms(start))]
             return update
-        limit = 2 * self.retrieval.params.evidence_k
-        update.update(candidates=(state["candidates"] + new)[:limit], rewrite_found_new=True,
-                      trace=[TraceEntry("rewrite", "ok", f"query={query!r}; new_candidates={len(new)}", _ms(start))])
+        update.update(candidates=merged, rewrite_found_new=True,
+                      trace=[TraceEntry("rewrite", status, f"query={query!r}; new_candidates={added}", _ms(start))])
         return update
 
     def generate(self, state: QAState) -> dict:
@@ -128,11 +134,17 @@ class WorkflowNodes:
         start = time.perf_counter()
         g = state["generated"]
         claims, citations, dropped = verify_claims(g.claims, state["candidates"], state["product_id"])
-        unknowns = tuple(dict.fromkeys([*g.unknowns, *state["assessment"].missing]))
-        status = final_status(state["assessment"].status, claims, unknowns)
+        # Gaps come from the assessment: the generator tends to list caveats, which must not
+        # turn an answered question into a partial one.
+        unknowns = tuple(dict.fromkeys(state["assessment"].missing))
+        status = final_status(state["assessment"].status, claims)
         detail = f"claims_kept={len(claims)}/{len(g.claims)} status={status}"
+        if status != state["assessment"].status:
+            detail += f" downgraded_from={state['assessment'].status}"
         if dropped:
             detail += f" dropped_ids={list(dropped)}"
+        if g.unknowns:
+            detail += f" generator_unknowns={g.unknowns}"
         return {"claims": claims, "citations": citations, "unknowns": unknowns, "status": status,
                 "trace": [TraceEntry("verify", "ok", detail, _ms(start))]}
 

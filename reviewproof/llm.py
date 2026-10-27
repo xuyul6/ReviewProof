@@ -1,6 +1,7 @@
 """Claude structured output: one Pydantic schema in, one validated instance out.
 
-Every failure (missing key, API or connection error, refusal, truncation) becomes LLMError,
+Every failure (missing key, API or connection error, refusal, truncation, output that fails the
+schema) becomes LLMError,
 so workflow nodes have a single exception to turn into a service failure.
 """
 from __future__ import annotations
@@ -11,7 +12,7 @@ from dataclasses import dataclass
 from typing import Generic, Protocol, TypeVar
 
 import anthropic
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -63,6 +64,8 @@ class ClaudeLLM:
             )
         except anthropic.AnthropicError as exc:
             raise LLMError(f"{type(exc).__name__}: {exc}") from exc
+        except ValidationError as exc:  # parse validates eagerly; a reply cut off mid-JSON lands here
+            raise LLMError(f"invalid structured output (truncated or refused reply): {exc}") from exc
         if response.stop_reason == "refusal":
             raise LLMError("refused")
         if response.stop_reason == "max_tokens":

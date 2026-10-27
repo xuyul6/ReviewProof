@@ -1,4 +1,8 @@
+import re
 import unittest
+from unittest.mock import patch
+
+import psycopg
 
 from reviewproof.ingest.amazonqa import Question
 from reviewproof.ingest.embed import embed_pending_chunks
@@ -7,6 +11,7 @@ from reviewproof.llm import LLMError
 from reviewproof.retrieval import ProductNotFoundError, RetrievalParams
 from reviewproof.retrieval.bm25 import BM25Cache
 from reviewproof.workflow import RetrievalDeps, answer_question
+from reviewproof.workflow import nodes as workflow_nodes
 from reviewproof.workflow.schemas import Claim, EvidenceAssessment, GeneratedAnswer, QueryPlan
 from tests.support import DatabaseTestCase, FakeEmbedder, FakeLLM, FakeReranker, make_manifest, make_product
 
@@ -32,6 +37,11 @@ def generated(*claims, unknowns=(), verdict="yes"):
 
 
 LOUD = ("A buyer says it is too loud.", ["A-r00001-c00"])
+
+
+def cite_first_candidate(prompt):
+    first = re.search(r"\[([A-Z]+-r\d{5}-c\d{2})\]", prompt).group(1)
+    return generated(("Cited from the excerpts.", [first]))
 
 
 class WorkflowTests(DatabaseTestCase):
@@ -196,6 +206,82 @@ class WorkflowTests(DatabaseTestCase):
         for _, system, prompt in prompts:
             for secret in ("SECRET-ANSWER", "SECRET-SNIPPET"):
                 self.assertNotIn(secret, system + prompt)
+
+    def test_assessor_decides_status_not_generator_caveats(self):
+        # Real runs: the generator filled unknowns with caveats and every answered became partial.
+        r = self.ask({"QueryPlan": [plan("loud")], "EvidenceAssessment": [assess("answered", ["A-r00001-c00"])],
+                      "GeneratedAnswer": [generated(LOUD, unknowns=["only one reviewer mentions it"])]})
+        self.assertEqual((r.status, r.unknowns), ("answered", ()))
+
+    def test_partial_unknowns_come_from_assessment(self):
+        r = self.ask({"QueryPlan": [plan("loud")],
+                      "EvidenceAssessment": [assess("partial", ["A-r00001-c00"], ["at night"])],
+                      "GeneratedAnswer": [generated(LOUD, unknowns=["caveat"])]})
+        self.assertEqual((r.status, r.unknowns), ("partial", ("at night",)))
+
+    def test_second_rewrite_adds_evidence_and_never_reassesses_identical_input(self):
+        r = self.ask({"QueryPlan": [plan("noise")],
+                      "EvidenceAssessment": [assess("partial", ["C-r00000-c00"], ["battery"], rewrite="battery"),
+                                             assess("partial", ["C-r00000-c00"], ["days"], rewrite="two days lasts"),
+                                             assess("answered", ["C-r00000-c00"])],
+                      "GeneratedAnswer": [generated(("Loud at night.", ["C-r00000-c00"]))]},
+                     product="C", max_rewrites=2)
+        prompts = [c[2] for c in self.calls("EvidenceAssessment")]
+        self.assertEqual(len(prompts), len(set(prompts)))
+        for entry in (t for t in r.trace if t.node == "rewrite" and "new_candidates" in t.detail):
+            added = int(entry.detail.rsplit("=", 1)[1])
+            self.assertGreater(added, 0)
+
+    def test_same_rewrite_query_not_reused_with_two_rewrites_allowed(self):
+        r = self.ask({"QueryPlan": [plan("noise")],
+                      "EvidenceAssessment": [assess("partial", ["C-r00000-c00"], ["battery"], rewrite="battery"),
+                                             assess("partial", ["C-r00000-c00"], ["battery"], rewrite="battery")],
+                      "GeneratedAnswer": [generated(("Loud at night.", ["C-r00000-c00"]))]},
+                     product="C", max_rewrites=2)
+        self.assertEqual(r.rewrites_used, 1)
+
+    def test_degraded_retrieval_continues_as_degraded(self):
+        deps = RetrievalDeps(embedder=FakeEmbedder(), embedding_model="fake", reranker=FakeReranker(fail=True),
+                             bm25_cache=BM25Cache(), params=RetrievalParams(evidence_k=2, full_context_max_tokens=0))
+        r = self.ask({"QueryPlan": [plan("loud")], "EvidenceAssessment": [assess("answered", ["A-r00001-c00"])],
+                      "GeneratedAnswer": [generated(LOUD)]}, deps=deps)
+        self.assertEqual((r.status, r.service_status), ("answered", "degraded"))
+
+    def _patched_retrieve(self, second):
+        real, calls = workflow_nodes.retrieve, []
+
+        def fake(*args, **kwargs):
+            calls.append(1)
+            if len(calls) == 2:
+                return second(real, *args, **kwargs)
+            return real(*args, **kwargs)
+        return patch.object(workflow_nodes, "retrieve", side_effect=fake)
+
+    def test_rewrite_retrieval_failure_keeps_candidates_and_degrades(self):
+        def boom(real, *args, **kwargs):
+            raise psycopg.OperationalError("connection lost")
+        with self._patched_retrieve(boom):
+            r = self.ask({"QueryPlan": [plan("noise")],
+                          "EvidenceAssessment": [assess("partial", ["C-r00000-c00"], ["battery"], rewrite="battery")],
+                          "GeneratedAnswer": [cite_first_candidate]}, product="C")
+        self.assertEqual((r.service_status, r.status, r.rewrites_used), ("degraded", "partial", 1))
+        self.assertEqual(len(self.calls("EvidenceAssessment")), 1)
+
+    def test_rewrite_retrieval_degraded_is_propagated(self):
+        def degraded(real, *args, **kwargs):
+            return real(*args, **{**kwargs, "reranker": FakeReranker(fail=True)})
+        with self._patched_retrieve(degraded):
+            r = self.ask({"QueryPlan": [plan("noise")],
+                          "EvidenceAssessment": [assess("partial", ["C-r00000-c00"], ["battery"], rewrite="battery"),
+                                                 assess("answered", ["C-r00000-c00"])],
+                          "GeneratedAnswer": [generated(("Loud at night.", ["C-r00000-c00"]))]}, product="C")
+        self.assertEqual(r.service_status, "degraded")
+
+    def test_read_error_in_retrieve_is_service_failure(self):
+        with patch.object(workflow_nodes, "retrieve", side_effect=psycopg.OperationalError("db down")):
+            r = self.ask({"QueryPlan": [plan("loud")]})
+        self.assertEqual((r.status, r.service_status), (None, "failed"))
+        self.assertIn("OperationalError", r.trace[-1].detail)
 
     def test_bad_input(self):
         with self.assertRaises(ValueError):
