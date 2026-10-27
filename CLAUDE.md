@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-ReviewProof (GitHub `xuyul6/ReviewProof`): pre-purchase, single-product review QA on AmazonQA data, with answerability (answered / partial / unanswerable) as the core metric. Built phase by phase per `docs/roadmap_cn.md`; phases 1 (data foundation), 2 (hybrid retrieval) and 3 (QA workflow) are done. Docs are in Chinese.
+ReviewProof (GitHub `xuyul6/ReviewProof`): pre-purchase, single-product review QA on AmazonQA data, with answerability (answered / partial / unanswerable) as the core metric. Built phase by phase per `docs/roadmap_cn.md`; phases 1 (data foundation), 2 (hybrid retrieval), 3 (QA workflow) and 4 (API and Vue frontend) are done. Docs are in Chinese.
 
 The old system (BRIDGE: `bridge/`, `app/`, Supabase + Gemini retrieval, the small-sample demo) lives in a separate repo, `xuyul6/BRIDGE`, checked out at `/Users/lux/llmproj/BRIDGE-by-EE6405-D31`. It is reference material only (roadmap section 4 says what to consult in which phase); never copy it in wholesale or add code to it.
 
@@ -22,6 +22,17 @@ python -m reviewproof.retrieval --qid 17020                         # rank one q
 python -m reviewproof.retrieval --product B00007E7C8 --query "volume control?" --strategy hybrid --no-rerank --json
 python -m reviewproof.workflow --qid 17020                          # answer with citations; needs ANTHROPIC_API_KEY
 python -m reviewproof.workflow --product B00007E7C8 --question "音量可以调节吗？" --json
+python -m reviewproof.api                                           # API on :8000 (+ frontend/dist at /); loads models at startup
+python -m reviewproof.mcp_server                                    # read-only MCP tools (REVIEWPROOF_MCP_TRANSPORT, default stdio)
+```
+
+Frontend (`frontend/`, Vue 3 + Vite + TypeScript; Node ≥ 20, nvm-managed locally):
+
+```bash
+cd frontend && npm ci
+npm run dev          # :5173, proxies /v1 and /healthz to :8000
+npm run build        # frontend/dist, served by the API at /
+npm run typecheck && npm test   # vue-tsc + Vitest (jsdom)
 ```
 
 `data/` is git-ignored; download `val-qar_products.jsonl` and `val-qar.jsonl` from AmazonQA's S3 bucket. The ingest command refuses to run (exit 2) if the files' SHA-256 differ from the manifest. It prints embedding progress on stderr and the final JSON report on stdout. Embedding runs on CUDA if available, otherwise CPU (about 11 chunks/s on an M-series Mac); Apple MPS is not used by default because its per-batch-shape graph cache grows until it runs out of memory. `REVIEWPROOF_EMBEDDING_DEVICE` overrides the device. A full embedding of the 24,599 sample chunks takes roughly 40 minutes on CPU.
@@ -50,6 +61,10 @@ Schema is `reviewproof/schema.sql` (datasets, products, reviews, chunks with `ve
 ### Phase 3: QA workflow (`reviewproof/workflow/`, `reviewproof/llm.py`)
 
 `answer_question(conn, product_id, question, *, llm, retrieval, max_rewrites)` in `graph.py` runs a LangGraph `StateGraph` (the only orchestration path; no hand-written fallback): plan (LLM `QueryPlan`: in or out of scope, yes/no, English search query — Chinese questions are translated here) → retrieve (phase 2, `strategy="auto"`) → assess (LLM `EvidenceAssessment`: answered / partial / unanswerable, supporting ids, missing parts, rewrite query) → optional rewrite + re-retrieve (at most `REVIEWPROOF_MAX_REWRITES`, default 1; hybrid products only; each rewrite may add up to `evidence_k` new chunks; stops when the query repeats or nothing new comes back) → generate (LLM `GeneratedAnswer`: claims with chunk ids, unknowns, verdict; skipped when unanswerable) → verify (pure: drops citations not among this run's candidates or of another product; a claim left without citations is removed; the assessment's status stands unless no claims are left, then unanswerable; listed gaps come only from the assessment's `missing`, never from the generator's caveats) → finalize (renders fixed copy in the question's language). Nodes degrade internally: a failed plan uses a heuristic (`service_status=degraded`); a failed retrieval, assessment or generation sets `service_status=failed` with `status=None` and an answer that says it was a service error — never "the reviews don't confirm this". `ClaudeLLM` calls `claude-haiku-5-5` via `client.messages.parse(output_format=<Pydantic schema>, output_config={"effort": ...})` with `max_tokens=4096`, no sampling parameters; every failure (including a missing `ANTHROPIC_API_KEY`, which the SDK would raise as a bare `TypeError`) becomes `LLMError`. Prompts (`prompts.py`) contain only the question and the product's chunk ids and texts. `QAResult` carries the trace, search queries, retrieval modes and token usage; persisting runs is phase 4.
+
+### Phase 4: API, frontend, MCP (`reviewproof/api/`, `frontend/`, `reviewproof/mcp_server.py`, `reviewproof/runs.py`)
+
+`create_app()` builds `Services` once in the lifespan (applies the schema, loads LLM client, BGE-M3 and the reranker, warms them up). Endpoints: `GET /healthz`, `GET /v1/products?category=&split=`, `GET /v1/products/{id}/questions` (qid + text only), `GET /v1/evidence/{review_id}`, `GET /v1/runs/{run_id}`, `POST /v1/qa` (SSE). `qa.py` runs the workflow (`stream_answer`, which yields each node's `TraceEntry` then the `QAResult`) in a worker thread under a process-wide lock — one QA run at a time, because `BM25Cache` is not thread-safe and CPU inference gains nothing from overlap. Events: `run_started`, one `progress` per node, then `answer_chunk`s (the verified answer split by line / 120 chars — not token streaming), `citations`, `done` (incl. `persisted`), or `error` for unexpected exceptions. Service failures still end with `done` and HTTP 200; only bad input is 4xx (404 product, 422 blank question). Every run is saved to `qa_runs` before the answer is sent, and the worker finishes and saves even if the client disconnects. The Vue app talks to the API only through relative paths (`frontend/src/api/client.ts`, `parseSSE` in `sse.ts`, state in `composables/useAsk.ts`); the badge logic in `components/badge.ts` puts service failure before every answer status. The MCP server exposes `list_products`, `search_reviews` and `get_review` (no QA tool), sharing `reviewproof/api/queries.py` with the API.
 
 ## Conventions
 
