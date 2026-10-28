@@ -1,5 +1,5 @@
 """Pure post-processing: keep only citations of this run's candidates, settle the final status,
-and render the answer text with fixed copy in the question's language."""
+and render the answer text with fixed copy in the question's language (Chinese or English)."""
 from __future__ import annotations
 
 import re
@@ -76,10 +76,10 @@ def verify_claims(
     return tuple(kept), tuple(citations), tuple(dict.fromkeys(dropped))
 
 
-def final_status(assessed: str, claims: Sequence[AnswerClaim]) -> str:
+def final_status(assessed: str, claims: Sequence[AnswerClaim], verdict: str | None = None) -> str:
     """The evidence assessment decides answerability; verification can only take it down to
-    unanswerable when no cited claim survives."""
-    return "unanswerable" if assessed == "unanswerable" or not claims else assessed
+    unanswerable: when no cited claim survives, or when a yes/no answer leans neither way."""
+    return "unanswerable" if assessed == "unanswerable" or not claims or verdict == "unknown" else assessed
 
 
 def render_answer(*, question: str, route: str, out_of_scope_reason: str, service_status: str,

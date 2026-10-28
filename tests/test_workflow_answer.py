@@ -4,7 +4,9 @@ from reviewproof.retrieval.types import Candidate, ChunkRow
 from reviewproof.workflow.answer import AnswerClaim, final_status, is_chinese, render_answer, verify_claims
 from reviewproof.workflow.prompts import (ASSESS_SYSTEM, GENERATE_SYSTEM, PLAN_SYSTEM, assess_prompt,
                                           generate_prompt, plan_prompt)
-from reviewproof.workflow.schemas import Claim
+import pydantic
+
+from reviewproof.workflow.schemas import Claim, GeneratedAnswer, GeneratedYesNoAnswer
 
 
 def cand(chunk_id, text, product_id="A"):
@@ -42,6 +44,9 @@ class FinalStatusTests(unittest.TestCase):
         self.assertEqual(final_status("partial", []), "unanswerable")
         self.assertEqual(final_status("answered", []), "unanswerable")
         self.assertEqual(final_status("unanswerable", one), "unanswerable")
+        # A yes/no answer whose excerpts lean neither way does not answer the question.
+        self.assertEqual(final_status("partial", one, verdict="unknown"), "unanswerable")
+        self.assertEqual(final_status("answered", one, verdict="yes"), "answered")
 
 
 class RenderTests(unittest.TestCase):
@@ -95,6 +100,55 @@ class PromptTests(unittest.TestCase):
         for status in ("answered", "partial", "unanswerable"):
             self.assertIn(status, ASSESS_SYSTEM)
         self.assertIn("mixed", GENERATE_SYSTEM)
+
+    def test_every_prompt_names_one_answer_language(self):
+        # A broken English question ("serves this coil...") must not be answered in Spanish.
+        q = "serves this coil to the Cherokee Liberty 2009"
+        for prompt in (plan_prompt(q), assess_prompt(q, CANDS_A), generate_prompt(q, True, "partial", CANDS_A, [])):
+            self.assertIn("Answer language: English", prompt)
+        self.assertIn("Answer language: Chinese", generate_prompt("吵吗？", True, "answered", CANDS_A, []))
+        for system in (PLAN_SYSTEM, ASSESS_SYSTEM, GENERATE_SYSTEM):
+            self.assertNotIn("question's language", system)
+            self.assertIn("answer language", system)
+
+    def test_plan_routes_away_only_what_reviews_cannot_speak_to(self):
+        # Gold guideline section 2: warranty, official dimensions, where to buy and comparisons are
+        # partial or answered when reviewers report first-hand experience, so they must reach retrieval.
+        out_part, review_part = PLAN_SYSTEM.split('"review_question"', 1)
+        for topic in ("price", "stock", "shipping"):
+            self.assertIn(topic, out_part)
+        for topic in ("warranty", "dimensions", "compatibility", "authenticity", "comparisons"):
+            self.assertNotIn(topic, out_part)
+            self.assertIn(topic, review_part)
+
+
+class GeneratePromptRuleTests(unittest.TestCase):
+    def test_verdict_answers_the_first_yes_no_question(self):
+        # Pilot qid 21567: "Does it come with the weight? If not do you carry that?" got Yes for "sold separately".
+        self.assertIn("first yes/no question", GENERATE_SYSTEM)
+        self.assertIn("verdict_question", GENERATE_SYSTEM)
+        # The model writes the question down before anything else and states the verdict last.
+        fields = list(GeneratedYesNoAnswer.model_json_schema()["properties"])
+        self.assertEqual((fields[0], fields[-1]), ("verdict_question", "verdict"))
+
+    def test_gaps_go_to_unknowns_not_claims(self):
+        # Pilot rerun: "The excerpts do not state the warranty terms [1]" was written as a cited claim.
+        self.assertIn("never as a claim", GENERATE_SYSTEM)
+
+
+class GeneratedAnswerTests(unittest.TestCase):
+    def test_generation_cannot_return_unknown_verdict(self):
+        # Generation runs only for answered or partial; unknown goes with unanswerable, and only with it.
+        with self.assertRaises(pydantic.ValidationError):
+            GeneratedAnswer(claims=[], unknowns=[], verdict="unknown")
+        # A yes/no answer always states a verdict; "unknown" is allowed and makes the run unanswerable.
+        with self.assertRaises(pydantic.ValidationError):
+            GeneratedYesNoAnswer(verdict_question="Is it loud?", claims=[], unknowns=[], verdict=None)
+        with self.assertRaises(pydantic.ValidationError):
+            GeneratedYesNoAnswer(verdict_question="Is it loud?", claims=[], unknowns=[])
+        GeneratedYesNoAnswer(verdict_question="Is it loud?", claims=[], unknowns=[], verdict="unknown")
+        self.assertIn("worry", GENERATE_SYSTEM)
+        self.assertIn("close case", GENERATE_SYSTEM)
 
 
 if __name__ == "__main__":

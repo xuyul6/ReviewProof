@@ -102,6 +102,8 @@ class FakeLLM:
     def structured(self, *, system: str, prompt: str, schema):
         name = schema.__name__
         self.calls.append((name, system, prompt))
+        if name == "GeneratedYesNoAnswer" and name not in self.script:  # scripts may give plain answers
+            name = "GeneratedAnswer"
         if not self.script.get(name):
             raise AssertionError(f"FakeLLM has no scripted {name} left")
         item = self.script[name].pop(0)

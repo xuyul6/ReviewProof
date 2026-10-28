@@ -9,7 +9,7 @@ from reviewproof.retrieval.bm25 import BM25Cache
 from reviewproof.retrieval.rerank import Reranker
 from reviewproof.retrieval.types import Candidate, ChannelStatus, RetrievalParams, RetrievalResult
 from reviewproof.workflow.answer import AnswerClaim, Citation
-from reviewproof.workflow.schemas import EvidenceAssessment, GeneratedAnswer
+from reviewproof.workflow.schemas import EvidenceAssessment, GeneratedAnswer, GeneratedYesNoAnswer
 
 
 @dataclass(frozen=True)
@@ -62,7 +62,7 @@ class QAState(TypedDict, total=False):
     assessment: EvidenceAssessment
     rewrites_used: int
     rewrite_found_new: bool
-    generated: GeneratedAnswer
+    generated: GeneratedAnswer | GeneratedYesNoAnswer
     claims: tuple[AnswerClaim, ...]
     citations: tuple[Citation, ...]
     unknowns: tuple[str, ...]

@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 
 from reviewproof.api import queries
+from reviewproof.api.annotation import annotation_router
 from reviewproof.api.qa import qa_events
 from reviewproof.api.services import Services, build_services, warm_up
 from reviewproof.config import load_settings
@@ -39,6 +40,9 @@ def create_app(services: Services | None = None, static_dir: Path | None = FRONT
 
     def svc() -> Services:
         return app.state.services
+
+    if (services.settings if services is not None else load_settings()).annotation_enabled:
+        app.include_router(annotation_router(svc))
 
     @app.get("/healthz")
     def healthz() -> dict:

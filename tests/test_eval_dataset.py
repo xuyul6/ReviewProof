@@ -7,9 +7,9 @@ from reviewproof.ingest.loader import load_dataset
 from tests.support import DatabaseTestCase, make_manifest, make_product
 
 
-def eq(qid, category="Electronics", answerable=True):
+def eq(qid, category="Electronics", answerable=True, qtype="descriptive"):
     return EvalQuestion(qid=qid, product_id="A", category=category, split="dev", strategy="hybrid",
-                        question_text="q", question_type="descriptive", answerable_silver=answerable, snippets=())
+                        question_text="q", question_type=qtype, answerable_silver=answerable, snippets=())
 
 
 class LoadQuestionsTests(DatabaseTestCase):
@@ -44,6 +44,19 @@ class SampleQuestionsTests(unittest.TestCase):
     def test_every_stratum_represented(self):
         strata = {(q.category, q.answerable_silver) for q in sample_questions(self.questions, 6, seed=1)}
         self.assertEqual(strata, {("Electronics", True), ("Electronics", False), ("Beauty", True), ("Beauty", False)})
+
+    def test_sample_by_question_type_covers_every_stratum(self):
+        questions = self.questions + [eq(f"y{i:02d}", qtype="yesno") for i in range(8)] + [eq("yn", answerable=False,
+                                                                                           qtype="yesno")]
+        by = ("category", "question_type", "answerable_silver")
+        picked = sample_questions(questions, 7, seed=1, by=by)
+        self.assertEqual(len(picked), 7)
+        self.assertEqual({(q.category, q.question_type, q.answerable_silver) for q in picked},
+                         {(q.category, q.question_type, q.answerable_silver) for q in questions})
+
+    def test_default_by_matches_explicit(self):
+        self.assertEqual(sample_questions(self.questions, 10, seed=7),
+                         sample_questions(self.questions, 10, seed=7, by=("category", "answerable_silver")))
 
     def test_n_larger_than_pool_returns_all(self):
         self.assertEqual(len(sample_questions(self.questions, 1000, seed=1)), len(self.questions))

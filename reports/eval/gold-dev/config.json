@@ -1,0 +1,31 @@
+{
+  "name": "gold-dev",
+  "split": "dev",
+  "started_at": "2026-10-28T16:06:12+00:00",
+  "git_commit": "af1f531e6bb4fce7e63d12eda89b67c35f324ae9",
+  "dataset_id": "amazonqa-val-v1",
+  "source_sha256": "866095e6cce9abe5bc142e0ff1326737d57b5f24b19670123c6006d618bd941f",
+  "embedding_model": "BAAI/bge-m3",
+  "rerank_model": "BAAI/bge-reranker-v2-m3",
+  "llm_model": "claude-haiku-5-5",
+  "retrieval_params": {
+    "rrf_k": 60,
+    "channel_top_k": 50,
+    "rerank_pool": 40,
+    "evidence_k": 8,
+    "full_context_max_tokens": 6000
+  },
+  "max_rewrites": 1,
+  "seed": 20261027,
+  "questions_in_split": 100,
+  "sample": 100,
+  "systems": [
+    "workflow",
+    "b0_no_evidence",
+    "b1_full_context"
+  ],
+  "labels": "gold",
+  "labels_path": "annotations/gold_v1/labels.jsonl",
+  "labels_sha256": "f22712d173066bdf87391cfeb8e567a7356c28c56c3bbc23dd366edf634f82ac",
+  "cost_note": "Claude Haiku 5.5 prices as of 2026-10-27; each call priced at its own tier (over 100k input tokens is long-context)"
+}

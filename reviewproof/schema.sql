@@ -36,3 +36,16 @@ CREATE TABLE IF NOT EXISTS qa_runs (
   route TEXT NOT NULL, status TEXT, service_status TEXT NOT NULL, verdict TEXT,
   llm_model TEXT NOT NULL, latency_ms DOUBLE PRECISION NOT NULL, result JSONB NOT NULL);
 CREATE INDEX IF NOT EXISTS qa_runs_product_idx ON qa_runs (product_id, created_at DESC);
+
+-- Gold annotation (phase 5b). qid references questions without ON DELETE CASCADE, so a re-ingest
+-- that would drop an annotated question fails instead of silently deleting human labels.
+CREATE TABLE IF NOT EXISTS annotation_items (
+  label_set TEXT NOT NULL, qid TEXT NOT NULL REFERENCES questions, dataset_id TEXT NOT NULL,
+  split TEXT NOT NULL, blind BOOLEAN NOT NULL, pool JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (label_set, qid));
+CREATE TABLE IF NOT EXISTS annotation_labels (
+  label_set TEXT NOT NULL, qid TEXT NOT NULL,
+  source TEXT NOT NULL CHECK (source IN ('draft', 'blind', 'final')),
+  answerability TEXT NOT NULL, verdict TEXT, grades JSONB NOT NULL, rationale TEXT NOT NULL,
+  annotator TEXT NOT NULL, guideline_version TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (label_set, qid, source), FOREIGN KEY (label_set, qid) REFERENCES annotation_items);

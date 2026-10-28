@@ -102,6 +102,20 @@ class IngestCliDatabaseTests(IngestFixture, DatabaseTestCase):
         self.assertEqual(report, {"products": 2, "missing_products": [], "reviews": 3, "chunks": 3,
                                   "chunks_without_embedding": 0, "questions": 1, "ok": True})
 
+    def test_reingest_that_would_drop_an_annotated_question_exits_2(self):
+        env = {"REVIEWPROOF_DATABASE_URL": TEST_DATABASE_URL}
+        self.assertEqual(self.run_main(["--manifest", str(self.manifest_path), "--skip-embeddings"], env)[0], 0)
+        self.conn.execute("INSERT INTO questions (qid, product_id, question_text, question_type, is_answerable_silver,"
+                          " answers, review_snippets) VALUES ('99', 'A', 'Gone?', 'yesno', true, '[]', '[]')")
+        self.conn.execute("INSERT INTO annotation_items (label_set, qid, dataset_id, split, blind, pool)"
+                          " VALUES ('gold_v1', '99', 'test-dataset', 'dev', false, '[]')")
+        self.conn.commit()
+        code, out, err = self.run_main(["--manifest", str(self.manifest_path), "--skip-embeddings"], env)
+        self.assertEqual(code, 2)
+        self.assertEqual(out, "")
+        self.assertIn("标注", err)
+        self.assertNotIn("Traceback", err)
+
     def test_progress_goes_to_stderr_and_stdout_stays_json(self):
         code, out, err = self.run_main(["--manifest", str(self.manifest_path)], {"REVIEWPROOF_DATABASE_URL": TEST_DATABASE_URL})
         self.assertEqual(code, 0)

@@ -16,16 +16,26 @@ class QueryPlan(BaseModel):
 class EvidenceAssessment(BaseModel):
     status: Literal["answered", "partial", "unanswerable"]
     supporting_chunk_ids: list[str]
-    missing: list[str]  # parts of the question the reviews don't cover, in the question's language
+    missing: list[str]  # parts of the question the reviews don't cover, in the answer language
     rewrite_query: str  # English search query aimed at what is missing; empty if none
 
 
 class Claim(BaseModel):
-    text: str  # one finding, in the question's language
+    text: str  # one finding, in the answer language (Chinese or English)
     chunk_ids: list[str]
 
 
 class GeneratedAnswer(BaseModel):
     claims: list[Claim]
     unknowns: list[str]
-    verdict: Literal["yes", "no", "mixed", "unknown"] | None  # only for yes/no questions
+    verdict: Literal["yes", "no", "mixed"] | None  # null; yes/no questions use GeneratedYesNoAnswer
+
+
+class GeneratedYesNoAnswer(BaseModel):
+    """For yes/no questions. Field order is the order the model writes: first the yes/no question the
+    verdict answers, last the verdict, which is required. "unknown" means the excerpts lean neither
+    way; verification then makes the run unanswerable, so unknown never goes with answered or partial."""
+    verdict_question: str  # the first yes/no question asked, as worded
+    claims: list[Claim]
+    unknowns: list[str]
+    verdict: Literal["yes", "no", "mixed", "unknown"]

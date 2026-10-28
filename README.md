@@ -12,6 +12,11 @@
 - 第 3 阶段（问答工作流）：LangGraph 把规划、检索、证据评估、必要时改写重检索、带引用生成和引用核验串起来，输出"能回答 / 部分能回答 / 评论无法确认"三态和是非题结论；服务出错时单独说明，不报成"评论无法确认"。生成用 Claude Haiku 5.5。
 - 第 4 阶段（接口和界面）：FastAPI 接口（流式问答 SSE、商品、示例问题、评论原文、运行记录）、Vue 3 前端页面、只读 MCP 检索服务；每次运行存进 PostgreSQL，可按 `run_id` 回查。
 - 第 5a 阶段（银标评测，小规模试跑）：用 AmazonQA 自带的银标评测检索（BM25、向量、混合、混合加重排四种方案）和可答性（完整工作流对比 B0 不给证据、B1 全量上下文），每个指标带 bootstrap 95% 置信区间。dev 和 test 各抽 50 题试跑，报告见 [pilot-dev](reports/eval/pilot-dev/report.md) 和 [pilot-test](reports/eval/pilot-test/report.md)。银标不是人工金标：检索参考证据就是 AmazonQA 自己的 BM25 前 10 条，天然偏向 BM25；所以这两份报告只是试跑记录，不据此下结论，结论留到 5b 阶段的人工金标评测。
+- 第 5b 阶段（人工金标评测）：dev 和 test 各抽 100 题，由 Claude 子 agent 按[标注规范](docs/annotation_guidelines_cn.md)预标，再由一位人工逐题审核，其中 40 题先盲标；每个候选块标 0/1/2 级证据。报告见 [gold-dev](reports/eval/gold-dev/report.md) 和 [gold-test](reports/eval/gold-test/report.md)。金标下的主要结果（均值 [95% 置信区间]）：
+  - 检索：混合检索加重排在两个 split 上 nDCG@5 都最高；减去 BM25 的配对差值，dev 为 0.211 [0.135, 0.286]，test 为 0.238 [0.148, 0.318]。银标试跑里重排看起来不如 BM25，原因是银标的参考证据就是 AmazonQA 自己的 BM25 结果。
+  - 可答性（答或拒是否正确）：完整工作流 dev 0.850 [0.780, 0.910]、test 0.830 [0.750, 0.900]；不给证据的 B0 为 0.300 和 0.250；AmazonQA 自带分类器（B2）都是 0.780。和全量上下文 B1 在同一批题上比，dev 上 B1 的点估计更高（0.929 对 0.843），test 上工作流更高（0.814 对 0.743），区间都重叠，分不出高下；工作流每题成本约为 B1 的 1/27（dev）和 1/10（test）。
+  - 主要错误是误拒（金标可答、系统拒答），误拒率 dev 0.143、test 0.175；是非题结论准确率只有 0.583（12 题）和 0.533（15 题）。
+  - 局限：只有一位人工，盲标一致率是人和子 agent 之间的；每个 split 约 100 题，区间较宽；test 上的一道试跑错题曾用于修改提示词（那道题不在金标里）。
 
 ## 本地运行
 
@@ -60,7 +65,10 @@ python -m reviewproof.api        # 启动时加载模型约 15 秒，然后打�
 ```bash
 python -m reviewproof.eval --split dev --name pilot-dev                    # 检索评测（整个 split）+ 工作流和两个基线（抽 50 题），会调用 Claude
 python -m reviewproof.eval --split test --name my-run --retrieval-only     # 只做检索评测，不调用 Claude
+python -m reviewproof.eval --split dev --name gold-dev --labels annotations/gold_v1/labels.jsonl   # 按金标评测这个 split 的全部金标题，会调用 Claude
 ```
+
+金标的标注流程：`python -m reviewproof.annotate pick` 抽题并固定候选池，子 agent 预标后用 `import-drafts` 导入，人工在 `REVIEWPROOF_ANNOTATION=1 python -m reviewproof.api` 启动的页面 `http://127.0.0.1:8000/#/annotate?set=gold_v1` 上逐题审核，最后 `python -m reviewproof.annotate export --set gold_v1` 导出到 `annotations/gold_v1/labels.jsonl`。
 
 结果写到 `reports/eval/<name>/`：`report.md` 是中文报告，`metrics.json` 是全部指标，`per_question.jsonl` 和 `retrieval.jsonl` 是逐题结果，`config.json` 记录代码版本、模型和参数。中断后重跑同一条命令会跳过已完成的题，重试出过服务故障的题。
 

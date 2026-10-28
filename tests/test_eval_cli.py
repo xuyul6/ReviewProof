@@ -84,6 +84,38 @@ class EvalCliTests(DatabaseTestCase):
         for _, system, prompt in self.llm.calls:
             self.assertNotIn("SECRET", system + prompt)
 
+    def write_labels(self, dataset_id="test-dataset", chunk="C-r00002-c00"):
+        base = {"label_set": "g", "guideline_version": "gold-v1", "dataset_id": dataset_id, "split": "dev",
+                "question_type": "descriptive", "verdict": None, "rationale": "r", "annotator": "human", "pool": [],
+                "draft": None, "blind": None, "changed_from_draft": True}
+        rows = [dict(base, qid="qc", product_id="C", answerability="answered", grades={chunk: 2}),
+                dict(base, qid="qn", product_id="C", answerability="unanswerable", grades={chunk: 0})]
+        path = self.root / "labels.jsonl"
+        path.write_text("".join(json.dumps(r) + "\n" for r in rows))
+        return path
+
+    def test_cli_labels_mode_uses_labelled_questions(self):
+        path = self.write_labels()
+        code, _, err = self.run_main(["--split", "dev", "--name", "g", "--labels", str(path)], FakeLLM(script()))
+        self.assertEqual(code, 0, err)
+        out = self.root / "g"
+        rows = [json.loads(l) for l in (out / "per_question.jsonl").read_text().splitlines()]
+        self.assertEqual({r["qid"] for r in rows}, {"qc", "qn"})
+        retrieval = {json.loads(l)["qid"]: json.loads(l) for l in (out / "retrieval.jsonl").read_text().splitlines()}
+        self.assertEqual((retrieval["qc"]["exclude_reason"], retrieval["qn"]["exclude_reason"]),
+                         (None, "gold_unanswerable"))
+        self.assertIn("ndcg_graded@5", retrieval["qc"]["hybrid"])
+        config = json.loads((out / "config.json").read_text())
+        self.assertEqual((config["labels"], config["labels_path"]), ("gold", str(path)))
+        self.assertIn("labels_sha256", config)
+        self.assertIn("B2 AmazonQA 自带分类器", (out / "report.md").read_text(encoding="utf-8"))
+
+    def test_cli_labels_mode_exits_2_on_mismatch(self):
+        for path in (self.write_labels(dataset_id="other"), self.write_labels(chunk="C-r09999-c00"),
+                     self.root / "missing.jsonl"):
+            code, _, err = self.run_main(["--split", "dev", "--name", "bad", "--labels", str(path)], FakeLLM({}))
+            self.assertEqual(code, 2, err)
+
     def test_retrieval_only_makes_no_llm_calls(self):
         code, _, _ = self.run_main(["--split", "dev", "--name", "t2", "--retrieval-only"], FakeLLM({}))
         self.assertEqual(code, 0)

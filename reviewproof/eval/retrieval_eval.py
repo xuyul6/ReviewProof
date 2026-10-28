@@ -12,7 +12,7 @@ from typing import AbstractSet, Mapping, Sequence
 import psycopg
 
 from reviewproof.eval.dataset import EvalQuestion
-from reviewproof.eval.metrics import hit_at_k, mrr_at_k, ndcg_at_k, recall_at_k
+from reviewproof.eval.metrics import hit_at_k, mrr_at_k, ndcg_at_k, ndcg_graded_at_k, recall_at_k
 from reviewproof.retrieval.dense import dense_search
 from reviewproof.retrieval.retriever import rrf_fuse
 from reviewproof.workflow.state import RetrievalDeps
@@ -67,13 +67,22 @@ def _scores(ranked: Sequence[str], relevant: AbstractSet[str]) -> dict[str, floa
 
 
 def evaluate_retrieval(conn: psycopg.Connection, questions: Sequence[EvalQuestion],
-                       qrels: Mapping[str, AbstractSet[str]], deps: RetrievalDeps) -> list[dict]:
+                       qrels: Mapping[str, AbstractSet[str]], deps: RetrievalDeps, *,
+                       gains: Mapping[str, Mapping[str, int]] | None = None) -> list[dict]:
+    """Silver mode: qrels from aligned snippets. Gold mode (gains given): qrels are the grade-2
+    chunks, gains has every graded chunk of the answerable gold questions, and nDCG@5 is also
+    computed with the grades as gains."""
     rows = []
     for q in questions:
         relevant = qrels.get(q.qid, frozenset())
-        reason = ("full_context" if q.strategy == "full_context"
-                  else "silver_unanswerable" if not q.answerable_silver
-                  else "no_aligned_snippet" if not relevant else None)
+        if gains is None:
+            reason = ("full_context" if q.strategy == "full_context"
+                      else "silver_unanswerable" if not q.answerable_silver
+                      else "no_aligned_snippet" if not relevant else None)
+        else:
+            reason = ("full_context" if q.strategy == "full_context"
+                      else "gold_unanswerable" if q.qid not in gains
+                      else "no_gold_evidence" if not relevant else None)
         row = {"qid": q.qid, "product_id": q.product_id, "category": q.category, "question_type": q.question_type,
                "strategy": q.strategy, "answerable_silver": q.answerable_silver, "n_relevant": len(relevant),
                "included": reason is None, "exclude_reason": reason}
@@ -83,5 +92,7 @@ def evaluate_retrieval(conn: psycopg.Connection, questions: Sequence[EvalQuestio
             row["latency_ms"] = (time.perf_counter() - start) * 1000
             for variant in VARIANTS:
                 row[variant] = None if ranked[variant] is None else _scores(ranked[variant], relevant)
+                if gains is not None and row[variant] is not None:
+                    row[variant]["ndcg_graded@5"] = ndcg_graded_at_k(ranked[variant], gains[q.qid], 5)
         rows.append(row)
     return rows
