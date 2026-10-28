@@ -13,7 +13,8 @@ from reviewproof.retrieval.bm25 import BM25Cache
 from reviewproof.workflow import QAResult, RetrievalDeps, answer_question, stream_answer
 from reviewproof.workflow.state import TraceEntry
 from reviewproof.workflow import nodes as workflow_nodes
-from reviewproof.workflow.schemas import Claim, EvidenceAssessment, GeneratedAnswer, QueryPlan
+from reviewproof.workflow.schemas import (Claim, EvidenceAssessment, GeneratedAnswer, GeneratedYesNoAnswer,
+                                          QueryPlan)
 from tests.support import DatabaseTestCase, FakeEmbedder, FakeLLM, FakeReranker, make_manifest, make_product
 
 NOISE = [f"Noise review {i}: the fan is loud at night." for i in range(6)]
@@ -141,11 +142,23 @@ class WorkflowTests(DatabaseTestCase):
                       "GeneratedAnswer": [generated(LOUD)]}, deps=self.make_deps())
         self.assertEqual((r.rewrites_used, r.retrieval_modes), (0, ("full_context",)))
 
-    def test_yes_no_answer_without_verdict_is_flagged_in_trace(self):
-        r = self.ask({"QueryPlan": [plan("loud")], "EvidenceAssessment": [assess("partial", ["A-r00001-c00"], ["x"])],
-                      "GeneratedAnswer": [generated(LOUD, verdict=None)]})
-        self.assertEqual((r.status, r.verdict), ("partial", "unknown"))
-        self.assertIn("verdict_missing", r.trace[-1].detail)
+    def test_yes_no_questions_generate_with_a_required_verdict(self):
+        self.ask({"QueryPlan": [plan("loud")], "EvidenceAssessment": [assess("partial", ["A-r00001-c00"], ["x"])],
+                  "GeneratedAnswer": [generated(LOUD)]})
+        self.assertEqual([c[0] for c in self.llm.calls], ["QueryPlan", "EvidenceAssessment", "GeneratedYesNoAnswer"])
+        self.ask({"QueryPlan": [plan("loud", yes_no=False)], "EvidenceAssessment": [assess("answered", ["A-r00001-c00"])],
+                  "GeneratedAnswer": [generated(LOUD, verdict=None)]})
+        self.assertEqual(self.llm.calls[-1][0], "GeneratedAnswer")
+
+    def test_yes_no_verdict_unknown_makes_the_run_unanswerable(self):
+        worry = GeneratedYesNoAnswer(claims=[Claim(text="One reviewer worries it may be tested on animals.",
+                                                   chunk_ids=["A-r00001-c00"])], unknowns=[], verdict="unknown")
+        r = self.ask({"QueryPlan": [plan("animal testing")],
+                      "EvidenceAssessment": [assess("partial", ["A-r00001-c00"], ["x"])],
+                      "GeneratedYesNoAnswer": [worry]})
+        self.assertEqual((r.status, r.verdict, r.citations), ("unanswerable", "unknown", ()))
+        self.assertIn("downgraded_from=partial", r.trace[-1].detail)
+        self.assertEqual(r.answer_text, "Verdict: Can't confirm\nThe reviews don't confirm this.")
 
     def test_plan_failure_degrades_with_heuristic(self):
         r = self.ask({"QueryPlan": [LLMError("boom")], "EvidenceAssessment": [assess("answered", ["A-r00001-c00"])],

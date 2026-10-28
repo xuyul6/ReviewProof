@@ -28,6 +28,10 @@ class Claim(BaseModel):
 class GeneratedAnswer(BaseModel):
     claims: list[Claim]
     unknowns: list[str]
-    # Only for yes/no questions. Generation runs only for answered or partial, so "unknown" (which goes
-    # with unanswerable) is not offered.
-    verdict: Literal["yes", "no", "mixed"] | None
+    verdict: Literal["yes", "no", "mixed"] | None  # null; yes/no questions use GeneratedYesNoAnswer
+
+
+class GeneratedYesNoAnswer(GeneratedAnswer):
+    """For yes/no questions the verdict is required. "unknown" means the excerpts lean neither way;
+    verification then makes the run unanswerable, so unknown never goes with answered or partial."""
+    verdict: Literal["yes", "no", "mixed", "unknown"]

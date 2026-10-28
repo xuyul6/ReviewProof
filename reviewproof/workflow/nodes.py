@@ -16,7 +16,7 @@ from reviewproof.retrieval import retrieve
 from reviewproof.workflow.answer import final_status, render_answer, verify_claims
 from reviewproof.workflow.prompts import (ASSESS_SYSTEM, GENERATE_SYSTEM, PLAN_SYSTEM, assess_prompt,
                                           generate_prompt, plan_prompt)
-from reviewproof.workflow.schemas import EvidenceAssessment, GeneratedAnswer, QueryPlan
+from reviewproof.workflow.schemas import EvidenceAssessment, GeneratedAnswer, GeneratedYesNoAnswer, QueryPlan
 from reviewproof.workflow.state import QAState, RetrievalDeps, RetrievalSnapshot, TraceEntry
 
 _YES_NO_EN = re.compile(r"^\s*(is|are|does|do|did|can|will|would|should|could|has|have)\b", re.IGNORECASE)
@@ -126,7 +126,8 @@ class WorkflowNodes:
         a = state["assessment"]
         prompt = generate_prompt(state["question"], state["is_yes_no"], a.status, state["candidates"], a.missing)
         try:
-            result = self.llm.structured(system=GENERATE_SYSTEM, prompt=prompt, schema=GeneratedAnswer)
+            schema = GeneratedYesNoAnswer if state["is_yes_no"] else GeneratedAnswer
+            result = self.llm.structured(system=GENERATE_SYSTEM, prompt=prompt, schema=schema)
         except LLMError as exc:
             return {"service_failed": True,
                     "trace": [TraceEntry("generate", "failed", f"LLMError: {exc}", _ms(start))]}
@@ -140,7 +141,7 @@ class WorkflowNodes:
         # Gaps come from the assessment: the generator tends to list caveats, which must not
         # turn an answered question into a partial one.
         unknowns = tuple(dict.fromkeys(state["assessment"].missing))
-        status = final_status(state["assessment"].status, claims)
+        status = final_status(state["assessment"].status, claims, g.verdict)
         detail = f"claims_kept={len(claims)}/{len(g.claims)} status={status}"
         if status != state["assessment"].status:
             detail += f" downgraded_from={state['assessment'].status}"
@@ -148,8 +149,6 @@ class WorkflowNodes:
             detail += f" dropped_ids={list(dropped)}"
         if g.unknowns:
             detail += f" generator_unknowns={g.unknowns}"
-        if state.get("is_yes_no") and g.verdict is None:
-            detail += " verdict_missing"  # finalize falls back to "unknown"
         return {"claims": claims, "citations": citations, "unknowns": unknowns, "status": status,
                 "trace": [TraceEntry("verify", "ok", detail, _ms(start))]}
 

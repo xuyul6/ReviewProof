@@ -6,7 +6,7 @@ from reviewproof.workflow.prompts import (ASSESS_SYSTEM, GENERATE_SYSTEM, PLAN_S
                                           generate_prompt, plan_prompt)
 import pydantic
 
-from reviewproof.workflow.schemas import Claim, GeneratedAnswer
+from reviewproof.workflow.schemas import Claim, GeneratedAnswer, GeneratedYesNoAnswer
 
 
 def cand(chunk_id, text, product_id="A"):
@@ -44,6 +44,9 @@ class FinalStatusTests(unittest.TestCase):
         self.assertEqual(final_status("partial", []), "unanswerable")
         self.assertEqual(final_status("answered", []), "unanswerable")
         self.assertEqual(final_status("unanswerable", one), "unanswerable")
+        # A yes/no answer whose excerpts lean neither way does not answer the question.
+        self.assertEqual(final_status("partial", one, verdict="unknown"), "unanswerable")
+        self.assertEqual(final_status("answered", one, verdict="yes"), "answered")
 
 
 class RenderTests(unittest.TestCase):
@@ -124,6 +127,13 @@ class GeneratedAnswerTests(unittest.TestCase):
         # Generation runs only for answered or partial; unknown goes with unanswerable, and only with it.
         with self.assertRaises(pydantic.ValidationError):
             GeneratedAnswer(claims=[], unknowns=[], verdict="unknown")
+        # A yes/no answer always states a verdict; "unknown" is allowed and makes the run unanswerable.
+        with self.assertRaises(pydantic.ValidationError):
+            GeneratedYesNoAnswer(claims=[], unknowns=[], verdict=None)
+        with self.assertRaises(pydantic.ValidationError):
+            GeneratedYesNoAnswer(claims=[], unknowns=[])
+        GeneratedYesNoAnswer(claims=[], unknowns=[], verdict="unknown")
+        self.assertIn("worry", GENERATE_SYSTEM)
         self.assertIn("close case", GENERATE_SYSTEM)
 
 

@@ -47,7 +47,8 @@ id for it in chunk_ids, copied exactly from the brackets. Do not state anything 
 - List parts of the question the excerpts do not cover in unknowns, in the answer language.
 - verdict only for yes/no questions, otherwise null: "yes" or "no" from what the excerpts show, or \
 "mixed" when reviewers disagree. A close case (another model year, a similar size) still leans yes or \
-no; say in the claim that it is a close case."""
+no; say in the claim that it is a close case. Use "unknown" only when the excerpts lean neither way \
+(a reviewer's worry or guess is not evidence); the answer is then reported as not confirmed."""
 
 
 def _excerpts(candidates: Sequence[Candidate]) -> str:
