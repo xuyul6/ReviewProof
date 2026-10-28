@@ -1,0 +1,906 @@
+{
+  "config": {
+    "name": "gold-dev",
+    "split": "dev",
+    "started_at": "2026-10-28T16:06:12+00:00",
+    "git_commit": "af1f531e6bb4fce7e63d12eda89b67c35f324ae9",
+    "dataset_id": "amazonqa-val-v1",
+    "source_sha256": "866095e6cce9abe5bc142e0ff1326737d57b5f24b19670123c6006d618bd941f",
+    "embedding_model": "BAAI/bge-m3",
+    "rerank_model": "BAAI/bge-reranker-v2-m3",
+    "llm_model": "claude-haiku-5-5",
+    "retrieval_params": {
+      "rrf_k": 60,
+      "channel_top_k": 50,
+      "rerank_pool": 40,
+      "evidence_k": 8,
+      "full_context_max_tokens": 6000
+    },
+    "max_rewrites": 1,
+    "seed": 20261027,
+    "questions_in_split": 100,
+    "sample": 100,
+    "systems": [
+      "workflow",
+      "b0_no_evidence",
+      "b1_full_context"
+    ],
+    "labels": "gold",
+    "labels_path": "annotations/gold_v1/labels.jsonl",
+    "labels_sha256": "f22712d173066bdf87391cfeb8e567a7356c28c56c3bbc23dd366edf634f82ac",
+    "cost_note": "Claude Haiku 5.5 prices as of 2026-10-27; each call priced at its own tier (over 100k input tokens is long-context)"
+  },
+  "retrieval": {
+    "n_total": 100,
+    "n_included": 56,
+    "excluded": {
+      "gold_unanswerable": 14,
+      "full_context": 30
+    },
+    "mean_relevant": 6.607142857142857,
+    "metrics": [
+      "recall@5",
+      "recall@10",
+      "recall@20",
+      "recall@40",
+      "hit@5",
+      "mrr@10",
+      "ndcg@5",
+      "ndcg_graded@5"
+    ],
+    "errors": {
+      "bm25": 0,
+      "dense": 0,
+      "hybrid": 0,
+      "hybrid_rerank": 0
+    },
+    "variants": {
+      "bm25": {
+        "n": 56,
+        "recall@5": {
+          "mean": 0.27761896279490816,
+          "lo": 0.2068858764368218,
+          "hi": 0.35588915053200765,
+          "n": 56
+        },
+        "recall@10": {
+          "mean": 0.4028477562353613,
+          "lo": 0.3150095527721578,
+          "hi": 0.48819189389042333,
+          "n": 56
+        },
+        "recall@20": {
+          "mean": 0.5649047760129693,
+          "lo": 0.4708275734536239,
+          "hi": 0.6526090360386579,
+          "n": 56
+        },
+        "recall@40": {
+          "mean": 0.734571316871737,
+          "lo": 0.6492437723924069,
+          "hi": 0.8083806322645609,
+          "n": 56
+        },
+        "hit@5": {
+          "mean": 0.6785714285714286,
+          "lo": 0.5535714285714286,
+          "hi": 0.8035714285714286,
+          "n": 56
+        },
+        "mrr@10": {
+          "mean": 0.5972222222222222,
+          "lo": 0.4799603174603174,
+          "hi": 0.7238095238095238,
+          "n": 56
+        },
+        "ndcg@5": {
+          "mean": 0.4313973505165683,
+          "lo": 0.33738135841095057,
+          "hi": 0.5264629035984589,
+          "n": 56
+        },
+        "ndcg_graded@5": {
+          "mean": 0.5736715887226388,
+          "lo": 0.4910608515979451,
+          "hi": 0.6536346371802567,
+          "n": 56
+        }
+      },
+      "dense": {
+        "n": 56,
+        "recall@5": {
+          "mean": 0.3535627858369455,
+          "lo": 0.2802131648113791,
+          "hi": 0.43294084387834386,
+          "n": 56
+        },
+        "recall@10": {
+          "mean": 0.48974604410528777,
+          "lo": 0.4066832735425172,
+          "hi": 0.5773643300560317,
+          "n": 56
+        },
+        "recall@20": {
+          "mean": 0.6902937223840585,
+          "lo": 0.6120104860125869,
+          "hi": 0.7624021199388846,
+          "n": 56
+        },
+        "recall@40": {
+          "mean": 0.8103444597535984,
+          "lo": 0.7413429576376005,
+          "hi": 0.8739495798319327,
+          "n": 56
+        },
+        "hit@5": {
+          "mean": 0.8214285714285714,
+          "lo": 0.7142857142857143,
+          "hi": 0.9107142857142857,
+          "n": 56
+        },
+        "mrr@10": {
+          "mean": 0.5860119047619048,
+          "lo": 0.48333333333333334,
+          "hi": 0.687202380952381,
+          "n": 56
+        },
+        "ndcg@5": {
+          "mean": 0.47674865415329654,
+          "lo": 0.39436027618024394,
+          "hi": 0.5672941631531846,
+          "n": 56
+        },
+        "ndcg_graded@5": {
+          "mean": 0.6121108600957305,
+          "lo": 0.5346113530113336,
+          "hi": 0.6898878267435491,
+          "n": 56
+        }
+      },
+      "hybrid": {
+        "n": 56,
+        "recall@5": {
+          "mean": 0.3472307075510857,
+          "lo": 0.2719406702074769,
+          "hi": 0.4246438697856765,
+          "n": 56
+        },
+        "recall@10": {
+          "mean": 0.5179549704497183,
+          "lo": 0.43159143319332394,
+          "hi": 0.5990698639595698,
+          "n": 56
+        },
+        "recall@20": {
+          "mean": 0.7118185837854956,
+          "lo": 0.6284942196575599,
+          "hi": 0.7869155354449473,
+          "n": 56
+        },
+        "recall@40": {
+          "mean": 0.9147888321995464,
+          "lo": 0.8610898526077098,
+          "hi": 0.9619189342403629,
+          "n": 56
+        },
+        "hit@5": {
+          "mean": 0.7857142857142857,
+          "lo": 0.6785714285714286,
+          "hi": 0.8928571428571429,
+          "n": 56
+        },
+        "mrr@10": {
+          "mean": 0.6494756235827664,
+          "lo": 0.5396967120181405,
+          "hi": 0.7540391156462585,
+          "n": 56
+        },
+        "ndcg@5": {
+          "mean": 0.5047559136947439,
+          "lo": 0.40479536379411835,
+          "hi": 0.6010547442195893,
+          "n": 56
+        },
+        "ndcg_graded@5": {
+          "mean": 0.6429068528104132,
+          "lo": 0.5589447107648104,
+          "hi": 0.7204691293995247,
+          "n": 56
+        }
+      },
+      "hybrid_rerank": {
+        "n": 56,
+        "recall@5": {
+          "mean": 0.4935837840380907,
+          "lo": 0.41411467996289425,
+          "hi": 0.5833340518608375,
+          "n": 56
+        },
+        "recall@10": {
+          "mean": 0.6838539422179127,
+          "lo": 0.6084119443231838,
+          "hi": 0.7601206799736211,
+          "n": 56
+        },
+        "recall@20": {
+          "mean": 0.8071252932991378,
+          "lo": 0.7383557968642002,
+          "hi": 0.8752146692010137,
+          "n": 56
+        },
+        "recall@40": {
+          "mean": 0.9147888321995464,
+          "lo": 0.8610898526077098,
+          "hi": 0.9619189342403629,
+          "n": 56
+        },
+        "hit@5": {
+          "mean": 0.8928571428571429,
+          "lo": 0.8035714285714286,
+          "hi": 0.9642857142857143,
+          "n": 56
+        },
+        "mrr@10": {
+          "mean": 0.7388392857142857,
+          "lo": 0.6479166666666666,
+          "hi": 0.8318452380952381,
+          "n": 56
+        },
+        "ndcg@5": {
+          "mean": 0.6422679181334956,
+          "lo": 0.5546201450815937,
+          "hi": 0.7288665046825287,
+          "n": 56
+        },
+        "ndcg_graded@5": {
+          "mean": 0.7576803142597178,
+          "lo": 0.6892410883151102,
+          "hi": 0.8217165261039298,
+          "n": 56
+        }
+      }
+    },
+    "hybrid_rerank_minus": {
+      "bm25": {
+        "hit@5": {
+          "mean": 0.21428571428571427,
+          "lo": 0.125,
+          "hi": 0.32142857142857145,
+          "n": 56
+        },
+        "ndcg@5": {
+          "mean": 0.21087056761692718,
+          "lo": 0.13504636825731436,
+          "hi": 0.28627286816729836,
+          "n": 56
+        }
+      },
+      "dense": {
+        "hit@5": {
+          "mean": 0.07142857142857142,
+          "lo": 0.0,
+          "hi": 0.16071428571428573,
+          "n": 56
+        },
+        "ndcg@5": {
+          "mean": 0.16551926398019903,
+          "lo": 0.08528531722470771,
+          "hi": 0.24342350367117474,
+          "n": 56
+        }
+      },
+      "hybrid": {
+        "hit@5": {
+          "mean": 0.10714285714285714,
+          "lo": 0.017857142857142856,
+          "hi": 0.21428571428571427,
+          "n": 56
+        },
+        "ndcg@5": {
+          "mean": 0.1375120044387516,
+          "lo": 0.06831358995944849,
+          "hi": 0.21174458455115394,
+          "n": 56
+        }
+      }
+    },
+    "hit@5_by_category": {
+      "Automotive": {
+        "bm25": {
+          "mean": 0.8,
+          "lo": 0.5,
+          "hi": 1.0,
+          "n": 10
+        },
+        "dense": {
+          "mean": 0.9,
+          "lo": 0.7,
+          "hi": 1.0,
+          "n": 10
+        },
+        "hybrid": {
+          "mean": 0.9,
+          "lo": 0.7,
+          "hi": 1.0,
+          "n": 10
+        },
+        "hybrid_rerank": {
+          "mean": 0.9,
+          "lo": 0.7,
+          "hi": 1.0,
+          "n": 10
+        }
+      },
+      "Beauty": {
+        "bm25": {
+          "mean": 0.7692307692307693,
+          "lo": 0.5384615384615384,
+          "hi": 1.0,
+          "n": 13
+        },
+        "dense": {
+          "mean": 0.8461538461538461,
+          "lo": 0.6153846153846154,
+          "hi": 1.0,
+          "n": 13
+        },
+        "hybrid": {
+          "mean": 0.6923076923076923,
+          "lo": 0.46153846153846156,
+          "hi": 0.9230769230769231,
+          "n": 13
+        },
+        "hybrid_rerank": {
+          "mean": 0.9230769230769231,
+          "lo": 0.7692307692307693,
+          "hi": 1.0,
+          "n": 13
+        }
+      },
+      "Electronics": {
+        "bm25": {
+          "mean": 0.6470588235294118,
+          "lo": 0.4117647058823529,
+          "hi": 0.8823529411764706,
+          "n": 17
+        },
+        "dense": {
+          "mean": 0.8235294117647058,
+          "lo": 0.6470588235294118,
+          "hi": 1.0,
+          "n": 17
+        },
+        "hybrid": {
+          "mean": 0.8235294117647058,
+          "lo": 0.6470588235294118,
+          "hi": 1.0,
+          "n": 17
+        },
+        "hybrid_rerank": {
+          "mean": 0.9411764705882353,
+          "lo": 0.8235294117647058,
+          "hi": 1.0,
+          "n": 17
+        }
+      },
+      "Home_and_Kitchen": {
+        "bm25": {
+          "mean": 0.5625,
+          "lo": 0.3125,
+          "hi": 0.8125,
+          "n": 16
+        },
+        "dense": {
+          "mean": 0.75,
+          "lo": 0.5,
+          "hi": 0.9375,
+          "n": 16
+        },
+        "hybrid": {
+          "mean": 0.75,
+          "lo": 0.5,
+          "hi": 0.9375,
+          "n": 16
+        },
+        "hybrid_rerank": {
+          "mean": 0.8125,
+          "lo": 0.5625,
+          "hi": 1.0,
+          "n": 16
+        }
+      }
+    }
+  },
+  "labels": "gold",
+  "answerability": {
+    "workflow": {
+      "n": 100,
+      "n_scored": 100,
+      "n_service_failed": 0,
+      "status_counts": {
+        "partial": 25,
+        "unanswerable": 30,
+        "answered": 45
+      },
+      "correct_refusal_rate": {
+        "mean": 0.8260869565217391,
+        "lo": 0.6521739130434783,
+        "hi": 0.9565217391304348,
+        "n": 23
+      },
+      "false_refusal_rate": {
+        "mean": 0.14285714285714285,
+        "lo": 0.06493506493506493,
+        "hi": 0.22077922077922077,
+        "n": 77
+      },
+      "answer_precision": 0.9428571428571428,
+      "answer_recall": 0.8571428571428571,
+      "answer_f1": {
+        "mean": 0.8979591836734694,
+        "lo": 0.84,
+        "hi": 0.9440993788819876,
+        "n": 100
+      },
+      "accuracy": {
+        "mean": 0.85,
+        "lo": 0.78,
+        "hi": 0.91,
+        "n": 100
+      },
+      "service_failure_reported_as_unanswerable": 0
+    },
+    "b0_no_evidence": {
+      "n": 100,
+      "n_scored": 100,
+      "n_service_failed": 0,
+      "status_counts": {
+        "unanswerable": 89,
+        "answered": 11
+      },
+      "correct_refusal_rate": {
+        "mean": 0.9130434782608695,
+        "lo": 0.782608695652174,
+        "hi": 1.0,
+        "n": 23
+      },
+      "false_refusal_rate": {
+        "mean": 0.8831168831168831,
+        "lo": 0.8051948051948052,
+        "hi": 0.948051948051948,
+        "n": 77
+      },
+      "answer_precision": 0.8181818181818182,
+      "answer_recall": 0.11688311688311688,
+      "answer_f1": {
+        "mean": 0.20454545454545456,
+        "lo": 0.09523809523809523,
+        "hi": 0.32608695652173914,
+        "n": 100
+      },
+      "accuracy": {
+        "mean": 0.3,
+        "lo": 0.21,
+        "hi": 0.4,
+        "n": 100
+      },
+      "service_failure_reported_as_unanswerable": 0
+    },
+    "b1_full_context": {
+      "n": 70,
+      "n_scored": 70,
+      "n_service_failed": 0,
+      "status_counts": {
+        "partial": 17,
+        "answered": 36,
+        "unanswerable": 17
+      },
+      "correct_refusal_rate": {
+        "mean": 0.9285714285714286,
+        "lo": 0.7857142857142857,
+        "hi": 1.0,
+        "n": 14
+      },
+      "false_refusal_rate": {
+        "mean": 0.07142857142857142,
+        "lo": 0.017857142857142856,
+        "hi": 0.14285714285714285,
+        "n": 56
+      },
+      "answer_precision": 0.9811320754716981,
+      "answer_recall": 0.9285714285714286,
+      "answer_f1": {
+        "mean": 0.9541284403669725,
+        "lo": 0.9090909090909091,
+        "hi": 0.990990990990991,
+        "n": 70
+      },
+      "accuracy": {
+        "mean": 0.9285714285714286,
+        "lo": 0.8714285714285714,
+        "hi": 0.9857142857142858,
+        "n": 70
+      },
+      "service_failure_reported_as_unanswerable": 0
+    },
+    "workflow_b1_qids": {
+      "n": 70,
+      "n_scored": 70,
+      "n_service_failed": 0,
+      "status_counts": {
+        "partial": 17,
+        "unanswerable": 19,
+        "answered": 34
+      },
+      "correct_refusal_rate": {
+        "mean": 0.7857142857142857,
+        "lo": 0.5,
+        "hi": 1.0,
+        "n": 14
+      },
+      "false_refusal_rate": {
+        "mean": 0.14285714285714285,
+        "lo": 0.05357142857142857,
+        "hi": 0.25,
+        "n": 56
+      },
+      "answer_precision": 0.9411764705882353,
+      "answer_recall": 0.8571428571428571,
+      "answer_f1": {
+        "mean": 0.897196261682243,
+        "lo": 0.8260869565217391,
+        "hi": 0.95,
+        "n": 70
+      },
+      "accuracy": {
+        "mean": 0.8428571428571429,
+        "lo": 0.7428571428571429,
+        "hi": 0.9285714285714286,
+        "n": 70
+      },
+      "service_failure_reported_as_unanswerable": 0
+    },
+    "b2_amazonqa_classifier": {
+      "n": 100,
+      "n_scored": 100,
+      "n_service_failed": 0,
+      "status_counts": {
+        "answered": 75,
+        "unanswerable": 25
+      },
+      "correct_refusal_rate": {
+        "mean": 0.5652173913043478,
+        "lo": 0.34782608695652173,
+        "hi": 0.782608695652174,
+        "n": 23
+      },
+      "false_refusal_rate": {
+        "mean": 0.15584415584415584,
+        "lo": 0.07792207792207792,
+        "hi": 0.23376623376623376,
+        "n": 77
+      },
+      "answer_precision": 0.8666666666666667,
+      "answer_recall": 0.8441558441558441,
+      "answer_f1": {
+        "mean": 0.8552631578947368,
+        "lo": 0.7913669064748201,
+        "hi": 0.9102564102564102,
+        "n": 100
+      },
+      "accuracy": {
+        "mean": 0.78,
+        "lo": 0.7,
+        "hi": 0.86,
+        "n": 100
+      },
+      "service_failure_reported_as_unanswerable": 0
+    }
+  },
+  "cost_latency": {
+    "workflow": {
+      "n": 100,
+      "cost_usd_total": 0.1121283,
+      "cost_usd_mean": 0.001121283,
+      "latency_ms_p50": 14523.519707960077,
+      "latency_ms_p95": 27145.457083941437,
+      "llm_calls_mean": 3.14,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    },
+    "b0_no_evidence": {
+      "n": 100,
+      "cost_usd_total": 0.009441100000000001,
+      "cost_usd_mean": 9.441100000000001e-05,
+      "latency_ms_p50": 1642.0366669772193,
+      "latency_ms_p95": 2619.4790829904377,
+      "llm_calls_mean": 1.0,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    },
+    "b1_full_context": {
+      "n": 70,
+      "cost_usd_total": 1.9982729,
+      "cost_usd_mean": 0.028546755714285714,
+      "latency_ms_p50": 7071.834624977782,
+      "latency_ms_p95": 14202.804832952097,
+      "llm_calls_mean": 2.742857142857143,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    },
+    "workflow_b1_qids": {
+      "n": 70,
+      "cost_usd_total": 0.0732622,
+      "cost_usd_mean": 0.0010466028571428571,
+      "latency_ms_p50": 17927.148167043924,
+      "latency_ms_p95": 27482.66674997285,
+      "llm_calls_mean": 3.3142857142857145,
+      "degraded_rate": 0.0,
+      "citation_out_of_product": 0
+    }
+  },
+  "failure_cases": {
+    "false_refusal": [
+      {
+        "qid": "10844",
+        "status": "unanswerable",
+        "answerable_gold": true,
+        "answer": "The reviews don't confirm this."
+      },
+      {
+        "qid": "1505",
+        "status": "unanswerable",
+        "answerable_gold": true,
+        "answer": "Verdict: Can't confirm\nThe reviews don't confirm this."
+      },
+      {
+        "qid": "23528",
+        "status": "unanswerable",
+        "answerable_gold": true,
+        "answer": "Verdict: Can't confirm\nThe reviews don't confirm this."
+      },
+      {
+        "qid": "23674",
+        "status": "unanswerable",
+        "answerable_gold": true,
+        "answer": "Verdict: Can't confirm\nThe reviews don't confirm this."
+      },
+      {
+        "qid": "27383",
+        "status": "unanswerable",
+        "answerable_gold": true,
+        "answer": "Verdict: Can't confirm\nThe reviews don't confirm this."
+      }
+    ],
+    "answered_silver_unanswerable": [
+      {
+        "qid": "12206",
+        "status": "partial",
+        "answerable_gold": false,
+        "answer": "Verdict: Reviews disagree\nOne reviewer says the lamp did not fit their JVC rear projection TV. [1]\nOne reviewer says the lamp was not the right fit for their TV and caused color problems on screen. [2"
+      },
+      {
+        "qid": "23628",
+        "status": "partial",
+        "answerable_gold": false,
+        "answer": "One reviewer says a Microsoft Surface 2 fits the sleeve very well, but the excerpts do not address the Surface Pro 3 with its keyboard attached. [1]\nReviewers report sleeve fit varies by laptop: one s"
+      },
+      {
+        "qid": "39526",
+        "status": "partial",
+        "answerable_gold": false,
+        "answer": "One reviewer says the coil pack was priced at half the price of a Dodge dealership, and after installation the check engine light was removed. [1]\nOne reviewer says the coil fits great and fixed a #3 "
+      },
+      {
+        "qid": "65508",
+        "status": "partial",
+        "answerable_gold": false,
+        "answer": "Reviewers describe Jwoww's lotion as giving a noticeable tan after one or a few uses, and some say it outperforms other bronzers they tried. [1][2][3][4]\nOne reviewer said Jwoww made no visible differ"
+      }
+    ],
+    "errors": []
+  },
+  "three_state": {
+    "workflow": {
+      "n": 100,
+      "confusion": {
+        "answered": {
+          "answered": 41,
+          "partial": 10,
+          "unanswerable": 3
+        },
+        "partial": {
+          "answered": 4,
+          "partial": 11,
+          "unanswerable": 8
+        },
+        "unanswerable": {
+          "answered": 0,
+          "partial": 4,
+          "unanswerable": 19
+        }
+      },
+      "agreement": {
+        "mean": 0.71,
+        "lo": 0.62,
+        "hi": 0.79,
+        "n": 100
+      }
+    },
+    "b0_no_evidence": {
+      "n": 100,
+      "confusion": {
+        "answered": {
+          "answered": 4,
+          "partial": 0,
+          "unanswerable": 50
+        },
+        "partial": {
+          "answered": 5,
+          "partial": 0,
+          "unanswerable": 18
+        },
+        "unanswerable": {
+          "answered": 2,
+          "partial": 0,
+          "unanswerable": 21
+        }
+      },
+      "agreement": {
+        "mean": 0.25,
+        "lo": 0.17,
+        "hi": 0.34,
+        "n": 100
+      }
+    },
+    "b1_full_context": {
+      "n": 70,
+      "confusion": {
+        "answered": {
+          "answered": 29,
+          "partial": 9,
+          "unanswerable": 0
+        },
+        "partial": {
+          "answered": 6,
+          "partial": 8,
+          "unanswerable": 4
+        },
+        "unanswerable": {
+          "answered": 1,
+          "partial": 0,
+          "unanswerable": 13
+        }
+      },
+      "agreement": {
+        "mean": 0.7142857142857143,
+        "lo": 0.6,
+        "hi": 0.8142857142857143,
+        "n": 70
+      }
+    },
+    "workflow_b1_qids": {
+      "n": 70,
+      "confusion": {
+        "answered": {
+          "answered": 30,
+          "partial": 5,
+          "unanswerable": 3
+        },
+        "partial": {
+          "answered": 4,
+          "partial": 9,
+          "unanswerable": 5
+        },
+        "unanswerable": {
+          "answered": 0,
+          "partial": 3,
+          "unanswerable": 11
+        }
+      },
+      "agreement": {
+        "mean": 0.7142857142857143,
+        "lo": 0.6,
+        "hi": 0.8142857142857143,
+        "n": 70
+      }
+    }
+  },
+  "verdict_accuracy": {
+    "workflow": {
+      "n": 12,
+      "accuracy": {
+        "mean": 0.5833333333333334,
+        "lo": 0.3333333333333333,
+        "hi": 0.8333333333333334,
+        "n": 12
+      }
+    },
+    "b1_full_context": {
+      "n": 9,
+      "accuracy": {
+        "mean": 0.7777777777777778,
+        "lo": 0.5555555555555556,
+        "hi": 1.0,
+        "n": 9
+      }
+    },
+    "workflow_b1_qids": {
+      "n": 9,
+      "accuracy": {
+        "mean": 0.6666666666666666,
+        "lo": 0.3333333333333333,
+        "hi": 1.0,
+        "n": 9
+      }
+    }
+  },
+  "token_bands": [
+    {
+      "band": "≤20k",
+      "n": 38,
+      "workflow": {
+        "mean": 0.7368421052631579,
+        "lo": 0.5789473684210527,
+        "hi": 0.868421052631579,
+        "n": 38
+      },
+      "b1_full_context": {
+        "mean": 0.7631578947368421,
+        "lo": 0.631578947368421,
+        "hi": 0.8947368421052632,
+        "n": 38
+      }
+    },
+    {
+      "band": "20k–60k",
+      "n": 23,
+      "workflow": {
+        "mean": 0.6086956521739131,
+        "lo": 0.391304347826087,
+        "hi": 0.8260869565217391,
+        "n": 23
+      },
+      "b1_full_context": {
+        "mean": 0.5652173913043478,
+        "lo": 0.34782608695652173,
+        "hi": 0.782608695652174,
+        "n": 23
+      }
+    },
+    {
+      "band": ">60k",
+      "n": 9,
+      "workflow": {
+        "mean": 0.8888888888888888,
+        "lo": 0.6666666666666666,
+        "hi": 1.0,
+        "n": 9
+      },
+      "b1_full_context": {
+        "mean": 0.8888888888888888,
+        "lo": 0.6666666666666666,
+        "hi": 1.0,
+        "n": 9
+      }
+    }
+  ],
+  "agreement": {
+    "gold_vs_silver": {
+      "n": 100,
+      "kappa": 0.3972602739726028,
+      "agreement": 0.78
+    },
+    "draft_vs_final": {
+      "n": 100,
+      "kappa": 1.0,
+      "agreement": 1.0,
+      "changed_share": 0.03
+    },
+    "blind_vs_draft": {
+      "n": 20,
+      "kappa": 0.5934959349593496,
+      "agreement": 0.75
+    }
+  }
+}
