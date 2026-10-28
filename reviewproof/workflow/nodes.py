@@ -131,8 +131,12 @@ class WorkflowNodes:
         except LLMError as exc:
             return {"service_failed": True,
                     "trace": [TraceEntry("generate", "failed", f"LLMError: {exc}", _ms(start))]}
-        return {"generated": result.output, "usage": [(result.input_tokens, result.output_tokens)],
-                "trace": [TraceEntry("generate", "ok", f"claims={len(result.output.claims)}", _ms(start))]}
+        g = result.output
+        detail = f"claims={len(g.claims)}"
+        if isinstance(g, GeneratedYesNoAnswer):
+            detail += f" verdict_question={g.verdict_question!r} verdict={g.verdict}"
+        return {"generated": g, "usage": [(result.input_tokens, result.output_tokens)],
+                "trace": [TraceEntry("generate", "ok", detail, _ms(start))]}
 
     def verify(self, state: QAState) -> dict:
         start = time.perf_counter()

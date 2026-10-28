@@ -31,7 +31,11 @@ class GeneratedAnswer(BaseModel):
     verdict: Literal["yes", "no", "mixed"] | None  # null; yes/no questions use GeneratedYesNoAnswer
 
 
-class GeneratedYesNoAnswer(GeneratedAnswer):
-    """For yes/no questions the verdict is required. "unknown" means the excerpts lean neither way;
-    verification then makes the run unanswerable, so unknown never goes with answered or partial."""
+class GeneratedYesNoAnswer(BaseModel):
+    """For yes/no questions. Field order is the order the model writes: first the yes/no question the
+    verdict answers, last the verdict, which is required. "unknown" means the excerpts lean neither
+    way; verification then makes the run unanswerable, so unknown never goes with answered or partial."""
+    verdict_question: str  # the first yes/no question asked, as worded
+    claims: list[Claim]
+    unknowns: list[str]
     verdict: Literal["yes", "no", "mixed", "unknown"]

@@ -102,8 +102,8 @@ class FakeLLM:
     def structured(self, *, system: str, prompt: str, schema):
         name = schema.__name__
         self.calls.append((name, system, prompt))
-        if name not in self.script:  # a subclass schema (GeneratedYesNoAnswer) uses its parent's script
-            name = next((k.__name__ for k in schema.__mro__ if k.__name__ in self.script), name)
+        if name == "GeneratedYesNoAnswer" and name not in self.script:  # scripts may give plain answers
+            name = "GeneratedAnswer"
         if not self.script.get(name):
             raise AssertionError(f"FakeLLM has no scripted {name} left")
         item = self.script[name].pop(0)

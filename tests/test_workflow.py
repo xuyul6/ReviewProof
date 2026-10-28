@@ -151,13 +151,14 @@ class WorkflowTests(DatabaseTestCase):
         self.assertEqual(self.llm.calls[-1][0], "GeneratedAnswer")
 
     def test_yes_no_verdict_unknown_makes_the_run_unanswerable(self):
-        worry = GeneratedYesNoAnswer(claims=[Claim(text="One reviewer worries it may be tested on animals.",
+        worry = GeneratedYesNoAnswer(verdict_question="Is it tested on animals?", claims=[Claim(text="One reviewer worries it may be tested on animals.",
                                                    chunk_ids=["A-r00001-c00"])], unknowns=[], verdict="unknown")
         r = self.ask({"QueryPlan": [plan("animal testing")],
                       "EvidenceAssessment": [assess("partial", ["A-r00001-c00"], ["x"])],
                       "GeneratedYesNoAnswer": [worry]})
         self.assertEqual((r.status, r.verdict, r.citations), ("unanswerable", "unknown", ()))
         self.assertIn("downgraded_from=partial", r.trace[-1].detail)
+        self.assertIn("verdict_question='Is it tested on animals?'", r.trace[-2].detail)
         self.assertEqual(r.answer_text, "Verdict: Can't confirm\nThe reviews don't confirm this.")
 
     def test_plan_failure_degrades_with_heuristic(self):

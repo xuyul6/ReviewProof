@@ -122,6 +122,20 @@ class PromptTests(unittest.TestCase):
             self.assertIn(topic, review_part)
 
 
+class GeneratePromptRuleTests(unittest.TestCase):
+    def test_verdict_answers_the_first_yes_no_question(self):
+        # Pilot qid 21567: "Does it come with the weight? If not do you carry that?" got Yes for "sold separately".
+        self.assertIn("first yes/no question", GENERATE_SYSTEM)
+        self.assertIn("verdict_question", GENERATE_SYSTEM)
+        # The model writes the question down before anything else and states the verdict last.
+        fields = list(GeneratedYesNoAnswer.model_json_schema()["properties"])
+        self.assertEqual((fields[0], fields[-1]), ("verdict_question", "verdict"))
+
+    def test_gaps_go_to_unknowns_not_claims(self):
+        # Pilot rerun: "The excerpts do not state the warranty terms [1]" was written as a cited claim.
+        self.assertIn("never as a claim", GENERATE_SYSTEM)
+
+
 class GeneratedAnswerTests(unittest.TestCase):
     def test_generation_cannot_return_unknown_verdict(self):
         # Generation runs only for answered or partial; unknown goes with unanswerable, and only with it.
@@ -129,10 +143,10 @@ class GeneratedAnswerTests(unittest.TestCase):
             GeneratedAnswer(claims=[], unknowns=[], verdict="unknown")
         # A yes/no answer always states a verdict; "unknown" is allowed and makes the run unanswerable.
         with self.assertRaises(pydantic.ValidationError):
-            GeneratedYesNoAnswer(claims=[], unknowns=[], verdict=None)
+            GeneratedYesNoAnswer(verdict_question="Is it loud?", claims=[], unknowns=[], verdict=None)
         with self.assertRaises(pydantic.ValidationError):
-            GeneratedYesNoAnswer(claims=[], unknowns=[])
-        GeneratedYesNoAnswer(claims=[], unknowns=[], verdict="unknown")
+            GeneratedYesNoAnswer(verdict_question="Is it loud?", claims=[], unknowns=[])
+        GeneratedYesNoAnswer(verdict_question="Is it loud?", claims=[], unknowns=[], verdict="unknown")
         self.assertIn("worry", GENERATE_SYSTEM)
         self.assertIn("close case", GENERATE_SYSTEM)
 
