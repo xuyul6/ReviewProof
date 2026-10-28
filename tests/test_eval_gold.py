@@ -54,6 +54,14 @@ class LoadGoldTests(DatabaseTestCase):
             load_gold(self.conn, Path(self._tmp.name) / "missing.jsonl")
 
 
+    def test_load_gold_rejects_a_dataset_other_than_the_products(self):
+        self.conn.execute("INSERT INTO datasets (dataset_id, source_file, source_sha256, manifest)"
+                          " VALUES ('other-dataset', 'x', 'y', '{}')")
+        self.conn.commit()
+        with self.assertRaises(GoldError):
+            load_gold(self.conn, self.write(row("q1", "answered", {"A-r00001-c00": 2}, dataset_id="other-dataset")))
+
+
 class GoldPureTests(unittest.TestCase):
     def test_gold_qrels_only_answerable_and_grade_two_is_relevant(self):
         labels = {"a": label("a", "answered", {"c1": 2, "c2": 1, "c3": 0}), "p": label("p", "partial", {"c4": 2}),

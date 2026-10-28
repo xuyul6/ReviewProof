@@ -13,6 +13,7 @@ function item(qid: string, overrides: Partial<AnnotationItem> = {}): AnnotationI
   return {
     qid, product_id: "A", category: "Electronics", split: "dev", question_text: `Is ${qid} loud?`,
     question_type: "yesno", blind: false, pool, extra_chunks: [], draft_hidden: false, community_answers: ["Yes."],
+    missing_chunks: [],
     labels: { draft: { qid, source: "draft", answerability: "answered", verdict: "yes", grades: { c1: 2, c2: 0 },
                        rationale: "DRAFT-R", annotator: "agent:t" } },
     ...overrides,
@@ -162,6 +163,24 @@ describe("AnnotateApp", () => {
     await flushPromises();
     expect(client.item).toHaveBeenLastCalledWith("gold_v1", "q3");
     expect(wrapper.text()).toContain("Is q3 loud?");
+  });
+
+  it("next pending stays inside the split filter", async () => {
+    const summaries = [drafted("q1"), drafted("q2"), { ...drafted("q3"), split: "test" }];
+    const client = fakeClient(summaries);
+    const wrapper = await mountWith(client);
+    await wrapper.find("aside select").setValue("test");
+    await wrapper.find("button.next").trigger("click");
+    await flushPromises();
+    expect(client.item).toHaveBeenLastCalledWith("gold_v1", "q3");
+  });
+
+  it("warns when pool chunks are missing from the database", async () => {
+    const client = fakeClient([drafted("q1")], {
+      item: vi.fn(async (_set: string, qid: string) => item(qid, { missing_chunks: ["c7"] })),
+    });
+    const wrapper = await mountWith(client);
+    expect(wrapper.find('[data-test="missing-chunks"]').text()).toContain("c7");
   });
 
   it("adds a searched out-of-pool chunk to the saved grades", async () => {

@@ -38,6 +38,7 @@ export interface AnnotationItem {
   question_type: string;
   blind: boolean;
   pool: PoolChunk[];
+  missing_chunks: string[]; // pool chunk ids no longer in the database
   extra_chunks: PoolChunk[];
   labels: Partial<Record<LabelView["source"], LabelView>>;
   draft_hidden: boolean;

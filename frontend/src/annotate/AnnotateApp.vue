@@ -82,8 +82,9 @@ async function open(qid: string) {
   }
 }
 
+// Walks the filtered list, so "next" never leaves the split or status the reviewer picked.
 function nextPendingAfter(qid: string | undefined): string | undefined {
-  const list = items.value;
+  const list = shown.value;
   const start = list.findIndex((i) => i.qid === qid);
   for (let step = 1; step <= list.length; step++) {
     const candidate = list[(start + step + list.length) % list.length];
@@ -208,6 +209,10 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
     </aside>
 
     <main v-if="current" class="annotate-main">
+      <p v-if="current.missing_chunks.length" class="error" data-test="missing-chunks">
+        候选池里有 {{ current.missing_chunks.length }} 块在数据库中找不到（{{ current.missing_chunks.join("、") }}），
+        数据可能在挑题后被重新导入过。这道题保存不了，请先停下来检查数据。
+      </p>
       <section class="card">
         <p class="muted">{{ current.qid }} · {{ current.category }} · {{ current.question_type }} · {{ current.split }}
           <span v-if="current.blind"> · 盲标题</span></p>

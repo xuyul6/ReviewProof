@@ -35,8 +35,9 @@ class GoldLabel:
 
 
 def load_gold(conn: psycopg.Connection, path: Path) -> dict[str, GoldLabel]:
-    """Refuse labels made on other data: a dataset_id not in the database, a question that is gone,
-    or a graded chunk that no longer exists in that product (it would silently count as irrelevant)."""
+    """Refuse labels made on other data: a dataset_id not in the database or not the product's, a
+    question that is gone, or a graded chunk that no longer exists in that product (it would silently
+    count as irrelevant)."""
     if not path.exists():
         raise GoldError(f"gold label file not found: {path}")
     datasets = {d for (d,) in conn.execute("SELECT dataset_id FROM datasets").fetchall()}
@@ -55,10 +56,13 @@ def load_gold(conn: psycopg.Connection, path: Path) -> dict[str, GoldLabel]:
             raise GoldError(f"{path}:{line_no}: malformed label ({exc})") from exc
         if dataset_id not in datasets:
             raise GoldError(f"{label.qid}: labelled on dataset {dataset_id!r}, database has {sorted(datasets)}")
-        found = conn.execute("SELECT 1 FROM questions WHERE qid = %s AND product_id = %s",
-                             (label.qid, label.product_id)).fetchone()
+        found = conn.execute("SELECT p.dataset_id FROM questions q JOIN products p USING (product_id)"
+                             " WHERE q.qid = %s AND q.product_id = %s", (label.qid, label.product_id)).fetchone()
         if found is None:
             raise GoldError(f"{label.qid}: question not found for product {label.product_id}")
+        if found[0] != dataset_id:
+            raise GoldError(f"{label.qid}: labelled on dataset {dataset_id!r}, product {label.product_id} is now in"
+                            f" {found[0]!r}")
         present = {cid for (cid,) in conn.execute(
             "SELECT chunk_id FROM chunks WHERE product_id = %s AND chunk_id = ANY(%s)",
             (label.product_id, list(label.grades))).fetchall()}

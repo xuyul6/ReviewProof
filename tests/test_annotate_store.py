@@ -115,6 +115,14 @@ class AnnotationStoreTests(DatabaseTestCase):
         self.conn.rollback()
         self.assertIn("draft", get_item(self.conn, "gold_v1", "qa")["labels"])
 
+    def test_get_item_reports_pool_chunks_missing_from_the_database(self):
+        self.assertEqual(get_item(self.conn, "gold_v1", "qa")["missing_chunks"], [])
+        self.conn.execute("DELETE FROM chunks WHERE chunk_id = 'A-r00002-c00'")
+        self.conn.commit()
+        item = get_item(self.conn, "gold_v1", "qa")
+        self.assertEqual(item["missing_chunks"], ["A-r00002-c00"])
+        self.assertEqual([c["chunk_id"] for c in item["pool"]], ["A-r00000-c00", "A-r00001-c00"])
+
     def test_draft_cannot_be_replaced_after_human_labels(self):
         save_label(self.conn, "gold_v1", label())
         save_label(self.conn, "gold_v1", label(rationale="corrected draft"))  # still only a draft: allowed

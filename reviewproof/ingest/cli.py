@@ -105,7 +105,15 @@ def main(
             print(f"chunks.embedding is vector({column_dim}) but the code expects vector({EMBEDDING_DIM})",
                   file=sys.stderr)
             return 2
-        load_report = load_dataset(conn, manifest, products, questions)
+        try:
+            load_report = load_dataset(conn, manifest, products, questions)
+        except psycopg.errors.ForeignKeyViolation as exc:
+            # Gold annotations and saved QA runs pin their questions/products; the load was rolled back.
+            print(f"导入已回滚：这次导入会删除仍被标注或问答记录引用的行（{exc.diag.constraint_name}）。\n"
+                  f"  {exc.diag.message_detail or exc}\n"
+                  "  已有的金标数据不能随重新导入一起丢掉；如果确实要换数据，请先导出并另建标注集。",
+                  file=sys.stderr)
+            return 2
         embedded = 0
         embedding_model = settings.embedding_model
         if not args.skip_embeddings:

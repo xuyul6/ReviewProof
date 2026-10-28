@@ -136,6 +136,8 @@ def get_item(conn: psycopg.Connection, label_set: str, qid: str) -> dict | None:
             "question_type": qtype, "blind": blind,
             "pool": [{"chunk_id": cid, "review_id": chunks[cid][0], "text": chunks[cid][1]}
                      for cid in pool if cid in chunks],
+            # Pool chunks gone from the database (data re-ingested since pick); the item cannot be saved.
+            "missing_chunks": [cid for cid in pool if cid not in chunks],
             "labels": {src: asdict(lab) for src, lab in labels.items()}}
 
 
