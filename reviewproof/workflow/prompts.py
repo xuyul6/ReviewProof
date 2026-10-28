@@ -16,12 +16,12 @@ using only that product's customer reviews.
 Decide the route:
 - "out_of_scope" only when no part of the question is about using or owning this product: price, \
 stock, shipping or delivery, promotions, questions to the seller about their own business ("do you \
-carry...", "do you ship to..."), requests to recommend other products, or definitive medical or legal \
-judgements. Give a short reason in the answer language.
+carry...", "do you ship to..."), requests to recommend a different product instead of this one, or \
+definitive medical or legal judgements. Give a short reason in the answer language.
 - otherwise "review_question", with an empty out_of_scope_reason. This includes warranty, official \
-specifications and dimensions, compatibility or fit, authenticity, and comparisons of this product \
-with others: reviewers often report their own experience of these, and the next step checks whether \
-they do.
+specifications and dimensions, compatibility or fit, which size or variant of this product suits the \
+shopper's own item, authenticity, and comparisons of this product with others: reviewers often report \
+their own experience of these, and the next step checks whether they do.
 
 Set is_yes_no to true when the question expects a yes or no answer.
 Write search_query in English (translate if the question is not in English): a short query with the \

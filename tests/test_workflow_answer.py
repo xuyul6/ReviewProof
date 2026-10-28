@@ -137,6 +137,13 @@ class PromptTests(unittest.TestCase):
             self.assertNotIn(topic, out_part)
             self.assertIn(topic, review_part)
 
+    def test_choosing_a_size_of_this_product_is_a_review_question(self):
+        # Gold dev 73170: "...which one would you recommend?" about this sleeve's sizes was routed away
+        # as a recommendation of another product.
+        out_part, review_part = PLAN_SYSTEM.split('"review_question"', 1)
+        self.assertIn("a different product", out_part)
+        self.assertIn("size or variant", review_part)
+
 
 class GeneratePromptRuleTests(unittest.TestCase):
     def test_verdict_answers_the_first_yes_no_question(self):
