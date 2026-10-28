@@ -148,6 +148,8 @@ class WorkflowNodes:
             detail += f" dropped_ids={list(dropped)}"
         if g.unknowns:
             detail += f" generator_unknowns={g.unknowns}"
+        if state.get("is_yes_no") and g.verdict is None:
+            detail += " verdict_missing"  # finalize falls back to "unknown"
         return {"claims": claims, "citations": citations, "unknowns": unknowns, "status": status,
                 "trace": [TraceEntry("verify", "ok", detail, _ms(start))]}
 

@@ -1,5 +1,5 @@
 """Pure post-processing: keep only citations of this run's candidates, settle the final status,
-and render the answer text with fixed copy in the question's language."""
+and render the answer text with fixed copy in the question's language (Chinese or English)."""
 from __future__ import annotations
 
 import re

@@ -141,6 +141,12 @@ class WorkflowTests(DatabaseTestCase):
                       "GeneratedAnswer": [generated(LOUD)]}, deps=self.make_deps())
         self.assertEqual((r.rewrites_used, r.retrieval_modes), (0, ("full_context",)))
 
+    def test_yes_no_answer_without_verdict_is_flagged_in_trace(self):
+        r = self.ask({"QueryPlan": [plan("loud")], "EvidenceAssessment": [assess("partial", ["A-r00001-c00"], ["x"])],
+                      "GeneratedAnswer": [generated(LOUD, verdict=None)]})
+        self.assertEqual((r.status, r.verdict), ("partial", "unknown"))
+        self.assertIn("verdict_missing", r.trace[-1].detail)
+
     def test_plan_failure_degrades_with_heuristic(self):
         r = self.ask({"QueryPlan": [LLMError("boom")], "EvidenceAssessment": [assess("answered", ["A-r00001-c00"])],
                       "GeneratedAnswer": [generated(LOUD, verdict="yes")]})
