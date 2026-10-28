@@ -115,6 +115,18 @@ class PromptTests(unittest.TestCase):
             self.assertNotIn("question's language", system)
             self.assertIn("answer language", system)
 
+    def test_assess_prompt_follows_the_gold_guideline(self):
+        # Gold guideline section 2; the gold eval refused 11 answerable questions at this step, mostly
+        # close cases (another model year) that the guideline counts as partial.
+        answered, rest = ASSESS_SYSTEM.split('"partial"', 1)
+        partial, unanswerable = rest.split('"unanswerable"', 1)
+        self.assertIn("one reviewer", answered)
+        self.assertIn("disagree", answered)
+        self.assertIn("close case", partial)
+        self.assertIn("not even a close case", unanswerable)
+        # The pilot's 5609: a reviewer's worry is not evidence, so the arbiter refuses it here.
+        self.assertIn("worry", unanswerable)
+
     def test_plan_routes_away_only_what_reviews_cannot_speak_to(self):
         # Gold guideline section 2: warranty, official dimensions, where to buy and comparisons are
         # partial or answered when reviewers report first-hand experience, so they must reach retrieval.

@@ -31,9 +31,12 @@ ASSESS_SYSTEM = """You judge whether a product's customer reviews answer a shopp
 review excerpts given; do not fill gaps with general knowledge or assumptions about the product.
 
 status:
-- "answered": the excerpts answer every part of the question.
-- "partial": they answer some parts; list the uncovered parts in missing.
-- "unanswerable": they contain no information that answers the question.
+- "answered": the excerpts answer the core of every part of the question. A clear first-hand report \
+from one reviewer is enough. When reviewers disagree, that is still answered.
+- "partial": they answer some parts of the question, or they only describe a close case (another \
+model year or size, a similar use or setup); list what they leave open in missing.
+- "unanswerable": nothing in the excerpts bears on the question, not even a close case. A reviewer's \
+worry, guess or own question is not evidence.
 
 supporting_chunk_ids: ids of the excerpts that support an answer, copied exactly from the brackets.
 missing: the parts of the question the excerpts do not cover, written in the answer language.
