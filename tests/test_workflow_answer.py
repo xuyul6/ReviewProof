@@ -44,8 +44,12 @@ class FinalStatusTests(unittest.TestCase):
         self.assertEqual(final_status("partial", []), "unanswerable")
         self.assertEqual(final_status("answered", []), "unanswerable")
         self.assertEqual(final_status("unanswerable", one), "unanswerable")
-        # A yes/no answer whose excerpts lean neither way does not answer the question.
-        self.assertEqual(final_status("partial", one, verdict="unknown"), "unanswerable")
+        # A yes/no answer whose excerpts lean neither way keeps its cited evidence as a partial answer
+        # (the gold eval refused 11 answerable questions when this went to unanswerable).
+        self.assertEqual(final_status("partial", one, verdict="unknown"), "partial")
+        self.assertEqual(final_status("answered", one, verdict="unknown"), "partial")
+        self.assertEqual(final_status("answered", [], verdict="unknown"), "unanswerable")
+        self.assertEqual(final_status("unanswerable", one, verdict="unknown"), "unanswerable")
         self.assertEqual(final_status("answered", one, verdict="yes"), "answered")
 
 

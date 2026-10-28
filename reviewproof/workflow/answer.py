@@ -77,9 +77,13 @@ def verify_claims(
 
 
 def final_status(assessed: str, claims: Sequence[AnswerClaim], verdict: str | None = None) -> str:
-    """The evidence assessment decides answerability; verification can only take it down to
-    unanswerable: when no cited claim survives, or when a yes/no answer leans neither way."""
-    return "unanswerable" if assessed == "unanswerable" or not claims or verdict == "unknown" else assessed
+    """The evidence assessment decides answerability; verification can only take it down: to
+    unanswerable when no cited claim survives, and to partial when a yes/no answer leans neither
+    way (its cited claims stay as related evidence; sending these to unanswerable refused 11
+    answerable questions in the gold eval)."""
+    if assessed == "unanswerable" or not claims:
+        return "unanswerable"
+    return "partial" if verdict == "unknown" else assessed
 
 
 def render_answer(*, question: str, route: str, out_of_scope_reason: str, service_status: str,
