@@ -1,5 +1,15 @@
 name: reviewproof
 
+# docker compose up --build   the whole stack: db, then ingest (download, load, embed; safe to re-run),
+#                             then the API and web page on http://127.0.0.1:8000
+# docker compose up -d db     only the database, for local development and the tests
+
+x-app: &app
+  build: .
+  image: reviewproof-app
+  environment:
+    REVIEWPROOF_DATABASE_URL: postgresql://reviewproof:reviewproof@db:5432/reviewproof
+
 services:
   db:
     image: pgvector/pgvector:pg16
@@ -8,7 +18,7 @@ services:
       POSTGRES_PASSWORD: reviewproof
       POSTGRES_DB: reviewproof
     ports:
-      - "54329:5432"
+      - "127.0.0.1:${REVIEWPROOF_DB_PORT:-54329}:5432"
     volumes:
       - reviewproof-pgdata:/var/lib/postgresql/data
       - ./docker/initdb:/docker-entrypoint-initdb.d:ro
@@ -18,5 +28,39 @@ services:
       timeout: 5s
       retries: 10
 
+  ingest:
+    <<: *app
+    command: ["sh", "-c", "python -m reviewproof.ingest.download --manifest samples/manifest_v1.json && python -m reviewproof.ingest --manifest samples/manifest_v1.json"]
+    volumes:
+      - ./data:/app/data
+      - reviewproof-models:/models
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    command: ["python", "-m", "reviewproof.api", "--host", "0.0.0.0", "--port", "8000"]
+    # ANTHROPIC_API_KEY; without it the page still works and questions end as service errors.
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "127.0.0.1:${REVIEWPROOF_API_PORT:-8000}:8000"
+    volumes:
+      - reviewproof-models:/models
+    depends_on:
+      db:
+        condition: service_healthy
+      ingest:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 300s
+
 volumes:
   reviewproof-pgdata:
+  reviewproof-models:
