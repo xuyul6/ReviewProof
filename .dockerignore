@@ -1,0 +1,17 @@
+# The image needs only requirements.txt, reviewproof/, samples/ and frontend/ (built inside Docker).
+# Never send the API key or the AmazonQA data to the build.
+.env
+.env.*
+data
+.venv
+frontend/node_modules
+frontend/dist
+.git
+.superpowers
+.claude
+annotations
+reports
+docs
+tests
+CLAUDE.md
+**/__pycache__
