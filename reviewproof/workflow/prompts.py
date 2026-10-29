@@ -56,8 +56,7 @@ separately is "no"); cover any follow-up parts in claims. \
 Use "yes" or "no" from what the excerpts show, or \
 "mixed" when reviewers disagree. A close case (another model year, a similar size) still leans yes or \
 no; say in the claim that it is a close case. Use "unknown" only when the excerpts lean neither way \
-(a reviewer's worry or guess is not evidence); the yes/no is then reported as not confirmed and \
-your claims are shown as related evidence."""
+(a reviewer's worry or guess is not evidence); the answer is then reported as not confirmed."""
 
 
 def _excerpts(candidates: Sequence[Candidate]) -> str:
