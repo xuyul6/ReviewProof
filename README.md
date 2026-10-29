@@ -53,6 +53,7 @@ docker compose up --build                                          # ingest 发�
   - 主要错误是误拒（金标可答、系统拒答），误拒率 dev 0.143、test 0.175；是非题结论准确率只有 0.583（12 题）和 0.533（15 题）。
   - 针对误拒试过三处提示词和规则修改，dev 上没有成立：准确率仍是 0.850，只是把误拒换成了误答（回滚一处后误拒 11 → 8、误答 4 → 7）。已全部回滚，test 没有复跑。报告见 [gold-dev-r2](reports/eval/gold-dev-r2/report.md) 和 [gold-dev-r3](reports/eval/gold-dev-r3/report.md)，原因见[复盘文档](docs/design_and_lessons_cn.md) 9.5 节。
   - 局限：只有一位人工，盲标一致率是人和子 agent 之间的；每个 split 约 100 题，区间较宽；test 上的一道试跑错题曾用于修改提示词（那道题不在金标里）。
+- 第 6 阶段（可答性模型，检查后不训练）：原计划用银标训练一个可答性模型。先做了一个不训练、不调 Claude 的检查：在金标 dev 上，重排模型的最高分和可答性有关（AUC 0.802 [0.689, 0.892]），但只看分数的准确率不如工作流，在工作流拒答的题里也分不开误拒和正确拒答（AUC 0.608 [0.364, 0.837]）。所以没有训练单独的模型，可答性仍由 LLM 根据证据判断。报告见 [rerank-check-dev](reports/eval/rerank-check-dev/report.md)，理由见[复盘文档](docs/design_and_lessons_cn.md)第 10 节；各模块设计的依据汇总在复盘文档末尾的模块设计体检表。
 - 第 7 阶段（收尾）：`docker compose up --build` 一条命令启动全栈（下载并核对数据、导入、向量化、接口和网页），在干净克隆、没有 `.env` 的环境里验证过（模型用的是本机已下载的缓存；Docker 里向量算得太慢，只在容器里算了前 736 个块，其余按块编号从开发库复制，再由导入步骤校验）；写了[技术报告](docs/technical_report_cn.md)。
 
 ## 本地开发
@@ -104,6 +105,7 @@ python -m reviewproof.api        # 启动时加载模型约 15 秒，然后打�
 python -m reviewproof.eval --split dev --name pilot-dev                    # 检索评测（整个 split）+ 工作流和两个基线（抽 50 题），会调用 Claude
 python -m reviewproof.eval --split test --name my-run --retrieval-only     # 只做检索评测，不调用 Claude
 python -m reviewproof.eval --split dev --name gold-dev --labels annotations/gold_v1/labels.jsonl   # 按金标评测这个 split 的全部金标题，会调用 Claude
+python -m reviewproof.eval.rerank_check --labels annotations/gold_v1/labels.jsonl --split dev --workflow reports/eval/gold-dev/per_question.jsonl --name rerank-check-dev   # 第 6 阶段的检查：重排最高分和金标可答性，不调用 Claude
 ```
 
 金标的标注流程：`python -m reviewproof.annotate pick` 抽题并固定候选池，子 agent 预标后用 `import-drafts` 导入，人工在 `REVIEWPROOF_ANNOTATION=1 python -m reviewproof.api` 启动的页面 `http://127.0.0.1:8000/#/annotate?set=gold_v1` 上逐题审核，最后 `python -m reviewproof.annotate export --set gold_v1` 导出到 `annotations/gold_v1/labels.jsonl`。

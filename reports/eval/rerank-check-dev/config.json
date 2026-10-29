@@ -1,0 +1,25 @@
+{
+  "name": "rerank-check-dev",
+  "split": "dev",
+  "started_at": "2026-10-29T11:50:22+00:00",
+  "git_commit": "587fa680995a693d1b5f8303485a2b043e1fe15e-dirty",
+  "dataset_id": "amazonqa-val-v1",
+  "source_sha256": "866095e6cce9abe5bc142e0ff1326737d57b5f24b19670123c6006d618bd941f",
+  "embedding_model": "BAAI/bge-m3",
+  "rerank_model": "BAAI/bge-reranker-v2-m3",
+  "retrieval_params": {
+    "rrf_k": 60,
+    "channel_top_k": 50,
+    "rerank_pool": 40,
+    "evidence_k": 8,
+    "full_context_max_tokens": 6000
+  },
+  "query": "question_text",
+  "seed": 20261027,
+  "resamples": 1000,
+  "questions_in_split": 100,
+  "labels_path": "annotations/gold_v1/labels.jsonl",
+  "labels_sha256": "f22712d173066bdf87391cfeb8e567a7356c28c56c3bbc23dd366edf634f82ac",
+  "workflow_path": "reports/eval/gold-dev/per_question.jsonl",
+  "workflow_sha256": "d71456b0ea1098f21901ccafd028b681bde0a7a7e7257b16b32d8b36f5e09b04"
+}
