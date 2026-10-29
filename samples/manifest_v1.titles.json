@@ -1,0 +1,370 @@
+{
+  "source": {
+    "dataset": "Amazon Reviews 2023",
+    "homepage": "https://amazon-reviews-2023.github.io",
+    "citation": "Hou et al., 2024, arXiv:2403.03952",
+    "files": [
+      "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/meta_categories/meta_All_Beauty.jsonl.gz",
+      "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/meta_categories/meta_Beauty_and_Personal_Care.jsonl.gz",
+      "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/meta_categories/meta_Electronics.jsonl.gz",
+      "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/meta_categories/meta_Home_and_Kitchen.jsonl.gz",
+      "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/meta_categories/meta_Automotive.jsonl.gz"
+    ],
+    "retrieved": "2026-10-29"
+  },
+  "dataset_id": "amazonqa-val-v1",
+  "titles": {
+    "B00BJ1COYO": {
+      "title": "Cooler Master NotePal X-Slim Ultra-Slim Laptop Cooling Pad with 160mm Fan (R9-NBC-XSLI-GP),Black X-Slim",
+      "store": "Cooler Master",
+      "main_category": "Computers",
+      "file": "Electronics"
+    },
+    "B00007E7C8": {
+      "title": "Audio-Technica ATH-M30 Closed-Back Headphones",
+      "store": "Audio-Technica",
+      "main_category": "Musical Instruments",
+      "file": "Electronics"
+    },
+    "B004XXMUCQ": {
+      "title": "Ubiquiti Networks Enterprise AP Unifi",
+      "store": "Ubiquiti Networks",
+      "main_category": "Computers",
+      "file": "Electronics"
+    },
+    "B005BDAR5E": {
+      "title": "58MM Altura Photo Collapsible Rubber Lens Hood for Camera Lens with 58MM Filter Thread",
+      "store": "Altura Photo",
+      "main_category": "Camera & Photo",
+      "file": "Electronics"
+    },
+    "B001SVNHIC": {
+      "title": "2GB (1GBx2) Ram memory for Dell Inspiron E1405 E1505 E1705 9400 B120 B130 XPS Gen 2 G2 M140 6000 630M 6400",
+      "store": "DDR",
+      "main_category": "Computers",
+      "file": "Electronics"
+    },
+    "B00D0IT27Q": {
+      "title": "Portable, 2013 CALLAWAY UPRO MX+ BRAND NEW FACTORY SEALED 25,000 COURSES PRELOADED ALL GOLFERS SPECIAL Consumer Electronic Gadget Shop",
+      "store": "Callaway",
+      "main_category": "Sports & Outdoors",
+      "file": "Electronics"
+    },
+    "B004THA2OE": {
+      "title": "Wasabi Power Battery and Charger Kit for Canon BP-819, VIXIA HF10, HF11, HF20, HF21, HF100, HF200, HF G10, HF M30, HF M31, HF M32, HF M40, HF M41, HF M300, HF M400, HF S10, HF S11, HF S20, HF S21, HF S30, HF S100, HF S200, HG20, HG21, HG30, XA10",
+      "store": "Wasabi Power",
+      "main_category": "Camera & Photo",
+      "file": "Electronics"
+    },
+    "B001HKM1HM": {
+      "title": "Winegard HD-6010 HD FM Radio Antenna",
+      "store": "Winegard",
+      "main_category": "All Electronics",
+      "file": "Electronics"
+    },
+    "B00E3RHS6A": {
+      "title": "Corsair CMFMINI3-32GB Flash Voyager Mini 32GB USB 3.0",
+      "store": "Corsair",
+      "main_category": "Computers",
+      "file": "Electronics"
+    },
+    "B007K5H4Z2": {
+      "title": "Sony DAVTZ140 DVD Home Theater System",
+      "store": "Sony",
+      "main_category": "Home Audio & Theater",
+      "file": "Electronics"
+    },
+    "B000W5OYAA": {
+      "title": "JVC Replacement Lamp for Rear Projection JVC HDTVs (Discontinued by Manufacturer)",
+      "store": "eReplacements",
+      "main_category": "Home Audio & Theater",
+      "file": "Electronics"
+    },
+    "B007VWZVB8": {
+      "title": "RFN-4 (RF-902) Wireless & Cable Shutter Release for Olympus DSLR Cameras RM-UC1 USB (Olympus PEN-F, PEN E-PL8, OM-D E-M1, E-M5, E-30, E-620, E-520, E-510, E-420, E-410, PEN E-P5, E-PL5, E-PL3, E-PL2, PEN E-P3, E-PM1, EP-2, EP-1, SP-570UZ, SP-560UZ, SP-550UZ, SP-510UZ, SZ-30MR, Stylus 1)",
+      "store": "SMDV",
+      "main_category": "Camera & Photo",
+      "file": "Electronics"
+    },
+    "B005LRTH3I": {
+      "title": "NuForce Icon iDo Black Audiophile-Grade DAC and Headphone Amp for iPad, iPhone and iPod Touch",
+      "store": "NuForce",
+      "main_category": "Home Audio & Theater",
+      "file": "Electronics"
+    },
+    "B00J6W8O6K": {
+      "title": "PIONEER AVIC-7000NEX 7\" Double-DIN NEX Navigation A/V Receiver with WVGA Touchscreen, HD Radio(R) Ready, SiriusXM(TM) Ready, AppRadio(R) Mode, 7.9 Million POIs & Text-to-Speech Voice Guidance",
+      "store": "PIONEER",
+      "main_category": "Car Electronics",
+      "file": "Electronics"
+    },
+    "B0047Y0UQO": {
+      "title": "Mr. Coffee 12 Cup Programmable Coffee Maker with Thermal Carafe Option, Chrome",
+      "store": "Mr. Coffee",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B001DYJ9ZO": {
+      "title": "Creativeware 3-Gallon Unbreakable Beverage Dispenser",
+      "store": "CreativeWare",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B005HH5YUM": {
+      "title": "Nespresso Essenza C91 Manual Espresso Maker, Black",
+      "store": "Nespresso",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B000F0BYR8": {
+      "title": "T-fal TT7061 Avante Deluxe 2-Slice Toaster with Bagel Function, Black",
+      "store": "T-fal",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B001AQERMK": {
+      "title": "Deni 800-Watt Professional Grade Meat Grinder",
+      "store": "Deni",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B001713LA2": {
+      "title": "OXO Good Grips Silicone Collapsible Colander with Two Handles, Red",
+      "store": "OXO",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B000JZYOHQ": {
+      "title": "Emeril by All-Clad E6019764 Cast-Iron 2-Burner Reversible Grill Griddle Cookware, Black",
+      "store": "T-fal",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B0051T8XMW": {
+      "title": "Steamfast SF-370 Canister Cleaner with 15 Accessories-All-Natural, Chemical-Free Pressurized Steam Cleaning for Most Floors, Counters, Appliances, Windows, Autos, and More, 64 inches, White",
+      "store": "Steamfast",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B000YJO0HQ": {
+      "title": "Frenchi Home Furnishing Footstool with Storage, White finish with dark beige cover",
+      "store": "ORE",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B00HBXYFXW": {
+      "title": "Foodsaver 2461-Features(Item 844607) Advanced Design Vacuum Food Sealer (BLACK)",
+      "store": "FOODSAVER",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B004VMAC7Y": {
+      "title": "Moerman 88364 Handrail Airer Indoor/Outdoor Clothes Drying Rack",
+      "store": "Moerman",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B002WPOV8I": {
+      "title": "Butterfly Orchid Flower New Mirror Tray Collectible Decoration, Pink",
+      "store": "artico",
+      "main_category": "Amazon Home",
+      "file": "Home_and_Kitchen"
+    },
+    "B00AE6Q9SC": {
+      "title": "Koldfront 7 Series 14 Inch 18 Bottle Free Standing Dual Zone Cooling Wine Cooler",
+      "store": "Koldfront",
+      "main_category": "Appliances",
+      "file": "Home_and_Kitchen"
+    },
+    "B0047RV8WG": {
+      "title": "Ketofa 4x 194 168 5-SMD White High Power LED Car Lights Bulb",
+      "store": "XKGLOW",
+      "main_category": "Automotive",
+      "file": "Automotive"
+    },
+    "B0002Z9QO4": {
+      "title": "Lund 601016 Soft Pack Roof Bag , Black",
+      "store": "Lund",
+      "main_category": "Automotive",
+      "file": "Automotive"
+    },
+    "B009ZVI1HY": {
+      "title": "RAD Sportz 12 Volt Electric Co-Pilot Air Compressor w/Gauge for Bike or Auto",
+      "store": "RAD Sportz",
+      "main_category": null,
+      "file": "Automotive"
+    },
+    "B0044R871Y": {
+      "title": "Dart Seasonal Products CB99 38-Inch To 62-Inch Telescopic Snow Removal Car Brush with Ice Scraper",
+      "store": "Dart Seasonal Products",
+      "main_category": "Amazon Home",
+      "file": "Automotive"
+    },
+    "B000QGOPO0": {
+      "title": "ACDelco GM Genuine Parts 15038566 Front Door Radio Speaker",
+      "store": "ACDelco",
+      "main_category": "Automotive",
+      "file": "Electronics"
+    },
+    "B000OC3Q2I": {
+      "title": "Trimax UMAX100 Premium Universal Dual Purpose Coupler Lock , Black",
+      "store": "Trimax",
+      "main_category": "Automotive",
+      "file": "Automotive"
+    },
+    "B004C5P50Y": {
+      "title": "Blinc BL100 Bluetooth Headset Integrated Communication Module With Remote Add On for All Motorcycle Helmet",
+      "store": "VCAN",
+      "main_category": "AMAZON FASHION",
+      "file": "Electronics"
+    },
+    "B004Y6PTX4": {
+      "title": "Mopar 56028138AF Ignition Coil Pack",
+      "store": "Mopar",
+      "main_category": "Automotive",
+      "file": "Automotive"
+    },
+    "B005BU5DCO": {
+      "title": "Toyota Fuel Cap - 77300-06040",
+      "store": "TOYOTA",
+      "main_category": "Automotive",
+      "file": "Automotive"
+    },
+    "B000BRJVIY": {
+      "title": "Progressive Dynamics PD781WSBCV 780 Series 12V Ceiling Light - Single Light",
+      "store": "Progressive Dynamics",
+      "main_category": "Automotive",
+      "file": "Electronics"
+    },
+    "B005I2MP62": {
+      "title": "RoC Resurfacing Disks, Hypoallergenic Exfoliating Makeup Remover Pads for Wrinkles and Skin Tone, Hypo-Allegenic Skin Care, Oil-Free Daily Cleanser, 28 Count (Packaging May Vary)",
+      "store": "RoC",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B004FEKA3E": {
+      "title": "Jwoww Black Bronzer Dark Tanning Lotion 13.5 ounce",
+      "store": "Australian Gold",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B00CYA5E1O": {
+      "title": "ProX by Olay Microdermabrasion Plus Advanced Facial Cleansing Brush System",
+      "store": "Olay",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B0009XH6TG": {
+      "title": "Andis 80020 1875-Watt Fold-N-Go Ionic Hair Dryer, Lightweight with Professional Blowout Results, Quick Drying Blow Dryer, Black/silver",
+      "store": "Andis",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B006LRRQK8": {
+      "title": "Red Cherry False Eye Lashes #43 (6 Pack)",
+      "store": "Red Cherry",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B003CIOTDG": {
+      "title": "Iso Beauty Ultra Ceramic Hair Straightener Flat Iron",
+      "store": "SFRproducts",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B004D281CK": {
+      "title": "Neutrogena Sensitive Skin Face Liquid Mineral Sunscreen with Broad Spectrum SPF 50, Lightweight Sunscreen with Zinc Oxide, Hypoallergenic, Fragrance-Free, Non-Comedogenic, 1.4 fl. oz",
+      "store": "Neutrogena",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B0009R34JI": {
+      "title": "Bain de Soleil Orange Gelee Sunscreen, Tanning Lotion, 3.12 oz",
+      "store": "Bain De Soleil",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B001ET7HJI": {
+      "title": "Earth Therapeutics Mind/Body Therapy Sleep Mask, Cotton, Silk, 1 mask (Pack of 2)",
+      "store": "Earth Therapeutics",
+      "main_category": "All Beauty",
+      "file": "All_Beauty"
+    },
+    "B008O1V33A": {
+      "title": "Pro Beauty Tools Pbdr5885 Professional Lightweight Hair Dryer",
+      "store": "HOT TOOLS",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B00ABBC7XQ": {
+      "title": "15 Clip in Remy Human Hair Extensions 1b# Off Black 7pcs 70g by Lowpricenice",
+      "store": "Lowpricenice",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B002LE8P6O": {
+      "title": "Jose Eber Wet or Dry Straightening Iron, Black",
+      "store": "José Eber",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    },
+    "B00EXLLXHG": {
+      "title": "Elizawigs 3pcs20\" 22\"24\" Brazlian Virgin Remy Human Hair Body Wave Extension",
+      "store": "Elizawigs",
+      "main_category": "All Beauty",
+      "file": "Beauty_and_Personal_Care"
+    }
+  },
+  "missing": [
+    "B0049MV5OK",
+    "B003IHV6XW",
+    "B00CHJ34P0",
+    "B00AQUMZRA",
+    "B000VOE466",
+    "B00B8P8IVO",
+    "B004FL92RM",
+    "B00111UX40",
+    "B004EDPYHI",
+    "B0060US0AQ",
+    "B00J97X2YG",
+    "B005M8Y3YE",
+    "B002V9195S",
+    "B000079XWA",
+    "B001HL02Q8",
+    "B00D93AT24",
+    "B001CQTLJM",
+    "B006IC09P0",
+    "B000H4QEZE",
+    "B00345V7CI",
+    "B0052EIN3U",
+    "B00B2B98K4",
+    "B00EQHEURM",
+    "B00267PZUK",
+    "B004B61B34",
+    "B007ECFURK",
+    "B000VERBCU",
+    "B003FBV8ZW",
+    "B002RSIK4G",
+    "B000RXKR6M",
+    "B0031ZDU62",
+    "B003LFQ7W6",
+    "B001DCF6IA",
+    "B005X4QCAA",
+    "B0052JD9H0",
+    "B002E2WMWG",
+    "B00B1ETCFS",
+    "B009EU5ZMK",
+    "B003RW2K0G",
+    "B00365DABC",
+    "B002N5MKMG",
+    "B005X2F7JY",
+    "B001ABLKK2",
+    "B001AO0WCG",
+    "B000C1VX5S",
+    "B0087P9PB0",
+    "B000KOK6EQ",
+    "B00EP4B0IS",
+    "B00B7ZFMA0",
+    "B00GAZOMNK"
+  ]
+}

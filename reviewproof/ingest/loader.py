@@ -30,10 +30,10 @@ ON CONFLICT (dataset_id) DO UPDATE SET source_file = EXCLUDED.source_file,
 """
 
 _UPSERT_PRODUCT = """
-INSERT INTO products (product_id, dataset_id, category, split, band, review_count, chunk_count, token_estimate)
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+INSERT INTO products (product_id, dataset_id, category, title, split, band, review_count, chunk_count, token_estimate)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
 ON CONFLICT (product_id) DO UPDATE SET dataset_id = EXCLUDED.dataset_id, category = EXCLUDED.category,
-  split = EXCLUDED.split, band = EXCLUDED.band, review_count = EXCLUDED.review_count,
+  title = EXCLUDED.title, split = EXCLUDED.split, band = EXCLUDED.band, review_count = EXCLUDED.review_count,
   chunk_count = EXCLUDED.chunk_count, token_estimate = EXCLUDED.token_estimate
 """
 
@@ -72,7 +72,10 @@ def load_dataset(
     manifest: Mapping,
     products: Mapping[str, Product],
     questions: Mapping[str, Sequence[Question]],
+    titles: Mapping[str, str] | None = None,
 ) -> LoadReport:
+    """`titles` maps product ids to display titles from another source (AmazonQA has none);
+    a product without one gets NULL, so a load without titles clears earlier ones."""
     entries = manifest["products"]
     missing = [e["product_id"] for e in entries if e["product_id"] not in products]
     if missing:
@@ -87,7 +90,8 @@ def load_dataset(
                 product = products[entry["product_id"]]
                 chunks = [c for review in product.reviews for c in chunk_review(review)]
                 cur.execute(_UPSERT_PRODUCT, (
-                    product.product_id, dataset_id, product.category, entry["split"], entry["band"],
+                    product.product_id, dataset_id, product.category, (titles or {}).get(product.product_id),
+                    entry["split"], entry["band"],
                     len(product.reviews), len(chunks), sum(c.token_estimate for c in chunks),
                 ))
                 cur.executemany(_UPSERT_REVIEW, [

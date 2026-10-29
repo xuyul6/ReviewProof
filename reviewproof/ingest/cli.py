@@ -20,6 +20,7 @@ from reviewproof.embedding import Embedder, SentenceTransformerEmbedder
 from reviewproof.ingest.amazonqa import file_sha256, load_products, load_questions
 from reviewproof.ingest.embed import embed_pending_chunks
 from reviewproof.ingest.loader import load_dataset
+from reviewproof.ingest.titles import load_titles, titles_path
 
 
 def default_embedder(settings: Settings) -> Embedder:
@@ -74,6 +75,8 @@ def main(
     parser.add_argument("--products-file", type=Path, help="defaults to the manifest's source.products_file")
     parser.add_argument("--questions-file", type=Path, help="defaults to the manifest's source.questions_file")
     parser.add_argument("--skip-embeddings", action="store_true")
+    parser.add_argument("--titles", type=Path,
+                        help="product titles file; defaults to <manifest>.titles.json, skipped if that is absent")
     args = parser.parse_args(argv)
 
     settings = load_settings()
@@ -93,7 +96,14 @@ def main(
                   file=sys.stderr)
             return 2
 
+    titles_file = args.titles or titles_path(args.manifest)
+    if args.titles and not titles_file.exists():
+        print(f"找不到商品标题文件: {titles_file}", file=sys.stderr)
+        return 2
+    titles = load_titles(titles_file) if titles_file.exists() else {}
+
     ids = [p["product_id"] for p in manifest["products"]]
+    titles = {pid: titles[pid] for pid in ids if pid in titles}
     products = load_products(products_file, ids)
     questions = load_questions(questions_file, ids)
 
@@ -106,7 +116,7 @@ def main(
                   file=sys.stderr)
             return 2
         try:
-            load_report = load_dataset(conn, manifest, products, questions)
+            load_report = load_dataset(conn, manifest, products, questions, titles)
         except psycopg.errors.ForeignKeyViolation as exc:
             # Gold annotations and saved QA runs pin their questions/products; the load was rolled back.
             print(f"导入已回滚：这次导入会删除仍被标注或问答记录引用的行（{exc.diag.constraint_name}）。\n"
@@ -126,5 +136,6 @@ def main(
     finally:
         conn.close()
 
-    print(json.dumps({"load": asdict(load_report), "embedded": embedded, "verify": verify}, indent=2))
+    print(json.dumps({"load": asdict(load_report), "titles": len(titles), "embedded": embedded, "verify": verify},
+                     indent=2))
     return 0 if verify["ok"] else 1

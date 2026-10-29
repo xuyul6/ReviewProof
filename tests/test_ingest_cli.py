@@ -102,6 +102,23 @@ class IngestCliDatabaseTests(IngestFixture, DatabaseTestCase):
         self.assertEqual(report, {"products": 2, "missing_products": [], "reviews": 3, "chunks": 3,
                                   "chunks_without_embedding": 0, "questions": 1, "ok": True})
 
+    def test_titles_file_next_to_the_manifest_is_loaded(self):
+        self.manifest_path.with_suffix(".titles.json").write_text(json.dumps(
+            {"titles": {"A": {"title": "Koss PortaPro", "store": "Koss"}}, "missing": ["B"]}), encoding="utf-8")
+        code, out, _ = self.run_main(["--manifest", str(self.manifest_path), "--skip-embeddings"],
+                                     {"REVIEWPROOF_DATABASE_URL": TEST_DATABASE_URL})
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["titles"], 1)
+        rows = dict(self.conn.execute("SELECT product_id, title FROM products").fetchall())
+        self.assertEqual(rows, {"A": "Koss PortaPro", "B": None})
+
+    def test_missing_explicit_titles_file_exits_2(self):
+        code, _, err = self.run_main(
+            ["--manifest", str(self.manifest_path), "--titles", str(Path(self._tmp.name) / "nope.json")],
+            {"REVIEWPROOF_DATABASE_URL": TEST_DATABASE_URL})
+        self.assertEqual(code, 2)
+        self.assertIn("nope.json", err)
+
     def test_reingest_that_would_drop_an_annotated_question_exits_2(self):
         env = {"REVIEWPROOF_DATABASE_URL": TEST_DATABASE_URL}
         self.assertEqual(self.run_main(["--manifest", str(self.manifest_path), "--skip-embeddings"], env)[0], 0)
