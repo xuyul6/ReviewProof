@@ -11,7 +11,7 @@
   val-qar_products.jsonl ─ 抽样清单 ─ 读取与合并 ─ 系统评论 ID ─ 句级切分
      ├─ BGE-M3 向量化 ──────→ PostgreSQL + pgvector（chunks 表，按商品过滤）
      └─ 问题 / 社区回答 / 可答性银标 → questions 表（只用于评测，不进检索）
-  train-qar.jsonl 银标 → 微调可答性模型 → 用人工金标校准阈值（第 6 阶段）
+  （第 6 阶段原计划：train-qar.jsonl 银标 → 微调可答性模型 → 用人工金标校准阈值；检查后决定不做，见第 3 节）
 
 在线（FastAPI + LangGraph，唯一主链路）
   校验商品 → 意图路由 → 查询规划（改写；中文问题翻成英文关键词）
@@ -42,7 +42,7 @@
 | 融合与重排 | RRF（k=60）→ `bge-reranker-v2-m3` 重排前 40 条 → 取 8 条作证据 | RRF 不受两路分数量纲影响；重排模型多语言 | 0.65/0.35 加权、`bge-reranker-base` |
 | 自适应策略 | 商品评论总量不超过阈值时全部放进上下文，否则走混合检索；初始阈值 6,000 tokens，第 5 阶段在 dev 集上调 | 一半商品的评论不到约 3,000 tokens，这时检索没有意义 | 无 |
 | 生成 | Claude Haiku 5.5（`claude-haiku-5-5`），用 Anthropic 官方 Python SDK，输出结构化 JSON：结论、引用 ID、未知项、是非结论 | Claude 最便宜的模型，评测要跑大量题目；结构化输出才能核验引用 | Gemini 2.5 Flash；纯文本回答 |
-| 可答性 | 第 3 阶段先用 LLM 做证据评估；第 6 阶段微调交叉编码器，替换或对比 | 先跑通链路，再用训练好的模型提升，并保留对比数据 | 数量与词重合启发式 |
+| 可答性 | LLM 证据评估是唯一裁决者；第 6 阶段检查过重排模型的分数，不如它，所以没有训练单独的模型 | 金标 dev 上重排最高分分不开误拒和正确拒答（AUC 0.608 [0.364, 0.837]）；用银标训练，上限是 AmazonQA 自己的分类器（金标准确率 0.780，低于工作流） | 数量与词重合启发式；用银标微调交叉编码器 |
 | 编排 | LangGraph 是唯一主链路；在节点内降级 | 去掉"整图失败 → 手写工作流 → 直连推理"三套并行实现 | `BRIDGE_USE_LANGGRAPH` 开关 + 三层回退 |
 | 流式 | SSE 事件：`run_started / progress / answer_chunk / citations / done / error`；答案核验后再分块发布 | 引用要先核验再给用户；如实说明这不是逐 token 生成 | OpenAI 风格 chunk |
 | 运行记录 | PostgreSQL `qa_runs` 表 | 与数据同库，便于评测回查 | SQLite、打印日志 |
@@ -58,7 +58,7 @@
 | **3 LangGraph 工作流** | 从问题到带引用的三态回答 | `reviewproof/workflow/`：状态、节点、图；`reviewproof/llm.py`（参照旧文件夹里已换成 Claude 的 `bridge/core/llm_client.py` 重写） | 输出三态之一；所有引用都来自本商品的候选；改写最多 1 次；服务故障和"评论无法确认"分开；每个分支都有离线测试 |
 | **4 接口和界面** | 能演示的完整系统 | `reviewproof/api/`：`GET /v1/products`、`POST /v1/qa`（SSE）、`GET /v1/runs/{id}`、`GET /v1/evidence/{review_id}`；`qa_runs` 表；Vue 3 前端（`frontend/`，由 FastAPI 同源提供）；MCP Server 用新检索 | 页面上能选商品、提问、查看引用和运行详情；测试全部通过 |
 | **5 评测体系** | 用数字说明系统好不好 | `reviewproof/eval/`：题集、片段到评论的对齐（生成候选 qrels）、人工标注导出导入、评测运行器（BM25、稠密、混合、+重排、全量上下文、完整工作流、无检索 B0）、指标与报告；在 dev 集调自适应阈值 | 同一数据、同一命令可以复跑；报告带置信区间和失败案例；**需要人工标注约 200 题** |
-| **6 可答性模型** | 让核心卖点有模型和数据支撑 | 下载 `train-qar.jsonl`（下载前先确认大小）；构造训练集；微调交叉编码器；在金标 dev 集上校准阈值；接入证据评估节点 | 在金标 test 集上与 LLM 评估、AmazonQA 自带分类器对比，并写进报告 |
+| **6 可答性模型（检查后不训练）** | 判断值不值得训练单独的可答性模型 | 原计划是下载 `train-qar.jsonl`、用银标微调交叉编码器、在金标 dev 上校准阈值。先做了一个不训练、不调 Claude 的检查：`reviewproof/eval/rerank_check.py`，看重排最高分能不能区分可答和不可答，报告 `reports/eval/rerank-check-dev` | 检查结论和不训练的理由写进技术报告 6.4 节和复盘文档第 10 节；微调不做 |
 | **7 收尾** | 别人能一键跑起来 | Docker Compose 启动全栈；README、技术报告；决定是否公开仓库 | 全新环境按 README 能跑通 |
 
 阶段之间有依赖：1 → 2 → 3 → 4；第 5 阶段依赖第 3 阶段（不依赖界面）；第 6 阶段依赖第 5 阶段的金标。

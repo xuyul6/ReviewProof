@@ -1,0 +1,63 @@
+{
+  "questions": 100,
+  "scored": 100,
+  "failed": 0,
+  "gold": {
+    "answered": 54,
+    "unanswerable": 23,
+    "partial": 23
+  },
+  "auc_top1": {
+    "all": {
+      "auc": 0.8023715415019763,
+      "lo": 0.6894409937888198,
+      "hi": 0.8921513269339356,
+      "n_pos": 77,
+      "n_neg": 23
+    },
+    "hybrid": {
+      "auc": 0.8150510204081632,
+      "lo": 0.6772959183673469,
+      "hi": 0.9285714285714286,
+      "n_pos": 56,
+      "n_neg": 14
+    },
+    "full_context": {
+      "auc": 0.7513227513227513,
+      "lo": 0.5608465608465608,
+      "hi": 0.9047619047619048,
+      "n_pos": 21,
+      "n_neg": 9
+    }
+  },
+  "top1_median": {
+    "answerable": 0.33593282103538513,
+    "unanswerable": 0.014671656303107738
+  },
+  "accuracy": {
+    "workflow": 0.85,
+    "b2_silver": 0.78,
+    "always_answerable": 0.77,
+    "best_cut_in_sample": {
+      "cut": 0.003097053151577711,
+      "accuracy": 0.83
+    }
+  },
+  "refusals": {
+    "n": 30,
+    "false": 11,
+    "correct": 19,
+    "false_by_gold": {
+      "answered": 3,
+      "partial": 8
+    },
+    "auc_top1": {
+      "auc": 0.6076555023923444,
+      "lo": 0.36363636363636365,
+      "hi": 0.8373205741626795,
+      "n_pos": 11,
+      "n_neg": 19
+    }
+  },
+  "false_answers": 4
+}
