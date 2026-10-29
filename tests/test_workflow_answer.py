@@ -44,8 +44,12 @@ class FinalStatusTests(unittest.TestCase):
         self.assertEqual(final_status("partial", []), "unanswerable")
         self.assertEqual(final_status("answered", []), "unanswerable")
         self.assertEqual(final_status("unanswerable", one), "unanswerable")
-        # A yes/no answer whose excerpts lean neither way does not answer the question.
+        # A yes/no answer whose excerpts lean neither way does not answer the question. Keeping these as
+        # partial (gold-dev-r2) answered 5 gold-unanswerable dev questions to recover 4 answerable ones.
         self.assertEqual(final_status("partial", one, verdict="unknown"), "unanswerable")
+        self.assertEqual(final_status("answered", one, verdict="unknown"), "unanswerable")
+        self.assertEqual(final_status("answered", [], verdict="unknown"), "unanswerable")
+        self.assertEqual(final_status("unanswerable", one, verdict="unknown"), "unanswerable")
         self.assertEqual(final_status("answered", one, verdict="yes"), "answered")
 
 
@@ -147,6 +151,8 @@ class GeneratedAnswerTests(unittest.TestCase):
         with self.assertRaises(pydantic.ValidationError):
             GeneratedYesNoAnswer(verdict_question="Is it loud?", claims=[], unknowns=[])
         GeneratedYesNoAnswer(verdict_question="Is it loud?", claims=[], unknowns=[], verdict="unknown")
+        # An unknown verdict refuses the run, so its claims are never shown.
+        self.assertNotIn("related evidence", GENERATE_SYSTEM)
         self.assertIn("worry", GENERATE_SYSTEM)
         self.assertIn("close case", GENERATE_SYSTEM)
 
