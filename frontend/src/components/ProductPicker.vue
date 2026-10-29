@@ -53,7 +53,7 @@ const strategyLabel = (p: Product) => (p.strategy === "full_context" ? "全量�
       <span class="muted">ASIN {{ selected.product_id }} · 评论 {{ selected.review_count }} 条 · {{ strategyLabel(selected) }}</span>
     </p>
     <p class="muted">
-      数据来源：{{ source || "AmazonQA 验证集抽样" }}。商品标题按 ASIN 取自 Amazon Reviews 2023 元数据，可能和评论当时的商品页面不完全一致；没有标题的商品只显示 ASIN。
+      数据来源：{{ source || "AmazonQA 验证集抽样" }}。商品标题按 ASIN 取自 Amazon 商品元数据（优先用 2023 年版，缺的用 2014 年版补），可能和评论当时的商品页面不完全一致；没有标题的商品只显示 ASIN。
     </p>
   </section>
 </template>

@@ -123,7 +123,7 @@ REVIEWPROOF_TEST_DATABASE_URL=postgresql://reviewproof:reviewproof@localhost:543
 
 数据来自 AmazonQA（Mansi Gupta, Nitish Kulkarni, Raghuveer Chanda, Anirudha Rayasam, Zachary C. Lipton. *AmazonQA: A Review-Based Question Answering Task*. IJCAI 2019），从官方 S3 下载：`https://amazon-qa.s3-us-west-2.amazonaws.com/val-qar_products.jsonl` 和 `val-qar.jsonl`。AmazonQA 没有声明数据许可，所以本仓库不分发数据文件或数据库快照，只保存抽样清单（商品 ASIN 和文件的 SHA-256）。评测报告和金标里有题目文本和评论摘录。评论 ID（如 `B00007E7C8-r00012`）由本系统生成，不是 Amazon 的评论 ID。
 
-AmazonQA 没有商品名称。页面上的商品标题取自 Amazon Reviews 2023（McAuley Lab；Hou et al., 2024, arXiv:2403.03952，https://amazon-reviews-2023.github.io）的商品元数据，按 ASIN（即它的 `parent_asin`）匹配，100 件里找到 50 件，其余只显示 ASIN。标题是 2023 年的商品页面，可能和评论当时不完全一致。这份数据同样没有声明许可，仓库只保存这 50 件商品的标题、品牌和品类（`samples/manifest_v1.titles.json`）。重新生成要流式读取约 6.3 GB 的元数据（不落盘，本机实测约 5 分半）：`python -m reviewproof.ingest.titles --manifest samples/manifest_v1.json`。
+AmazonQA 没有商品名称。页面上的商品标题按 ASIN 取自 McAuley Lab 的两份商品元数据：先查 Amazon Reviews 2023（Hou et al., 2024, arXiv:2403.03952，https://amazon-reviews-2023.github.io；按它的 `parent_asin` 匹配），100 件里找到 50 件；剩下的 50 件再查 2014 年的 Amazon 商品数据（McAuley, Targett, Shi, van den Hengel. *Image-based Recommendations on Styles and Substitutes*. SIGIR 2015，https://snap.stanford.edu/data/amazon/productGraph/），全部找到。标题是这两个时间点的商品页面，可能和评论当时不完全一致；HTML 实体（如 `&reg;`）已还原。两份数据同样没有声明许可，仓库只保存这 100 件商品的标题、品牌和品类（`samples/manifest_v1.titles.json`）。重新生成要流式读取约 6.3 GB 加 530 MB 的元数据（不落盘；本机实测 2023 版约 5 分半，2014 版受下载速度限制约 1 小时 25 分）：`python -m reviewproof.ingest.titles --manifest samples/manifest_v1.json`。这个文件已存在时只补缺的标题，删掉它才会从头生成。
 
 ## 许可
 
