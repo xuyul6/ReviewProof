@@ -186,7 +186,7 @@ FastAPI 提供商品列表、示例问题、评论原文、运行记录和流式
 
 ## 8. 复现
 
-- **一键启动：** `docker compose up --build`（见 README），在干净克隆、没有 `.env` 的环境里验证过。首次运行要下载约 1.5 GB 数据和两个模型，并在 CPU 上计算 24,599 个块的向量：Apple 芯片的 Mac 上 Docker 里实测每分钟 85–96 块（4 个多小时），本机 Python 约 40 分钟，所以 README 给了先在本机导入的做法。
+- **一键启动：** `docker compose up --build`（见 README），在干净克隆、没有 `.env` 的环境里验证过（模型用的是本机已下载的缓存；Docker 里向量算得太慢，只在容器里算了前 736 个块，其余按块编号从开发库复制，再由导入步骤校验）。首次运行要下载约 1.5 GB 数据和两个模型，并在 CPU 上计算 24,599 个块的向量：Apple 芯片的 Mac 上 Docker 里实测每分钟 85–96 块（4 个多小时），本机 Python 约 40 分钟，所以 README 给了先在本机导入的做法。
 - **评测：** `python -m reviewproof.eval --split dev --name gold-dev --labels annotations/gold_v1/labels.jsonl`，会调用 Claude；`--retrieval-only` 只做检索评测，不调用 Claude。每份报告的 `config.json` 记录代码版本、数据 SHA-256、模型和参数。
 - **测试：** Python `unittest`（数据库测试只连名字以 `_test` 结尾的库）和前端 Vitest，GitHub Actions 上运行。
 

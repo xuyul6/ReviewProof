@@ -24,11 +24,12 @@ class DownloadError(Exception):
     pass
 
 
-def ensure_file(path: Path, url: str, sha256: str) -> str:
+def ensure_file(path: Path, url: str, sha256: str, *, timeout: float = 60.0) -> str:
     """Return "present" if path already holds the expected bytes, else download it and return
     "downloaded". The download goes to a .part file renamed only once its SHA-256 matches, so an
     interrupted or corrupted download never sits where ingest reads; a local file with other
-    contents is the user's and is refused, never overwritten."""
+    contents is the user's and is refused, never overwritten. `timeout` bounds each connect and
+    read (not the whole download), so a stalled connection fails instead of hanging."""
     if path.exists():
         actual = file_sha256(path)
         if actual == sha256:
@@ -39,7 +40,7 @@ def ensure_file(path: Path, url: str, sha256: str) -> str:
     part = path.with_name(path.name + ".part")
     digest = hashlib.sha256()
     try:
-        with urllib.request.urlopen(url) as response, open(part, "wb") as out:
+        with urllib.request.urlopen(url, timeout=timeout) as response, open(part, "wb") as out:
             total = int(response.headers.get("Content-Length") or 0)
             done, next_report = 0, 0.1
             for block in iter(lambda: response.read(_BLOCK), b""):

@@ -53,7 +53,7 @@ docker compose up --build                                          # ingest 发�
   - 主要错误是误拒（金标可答、系统拒答），误拒率 dev 0.143、test 0.175；是非题结论准确率只有 0.583（12 题）和 0.533（15 题）。
   - 针对误拒试过三处提示词和规则修改，dev 上没有成立：准确率仍是 0.850，只是把误拒换成了误答（回滚一处后误拒 11 → 8、误答 4 → 7）。已全部回滚，test 没有复跑。报告见 [gold-dev-r2](reports/eval/gold-dev-r2/report.md) 和 [gold-dev-r3](reports/eval/gold-dev-r3/report.md)，原因见[复盘文档](docs/design_and_lessons_cn.md) 9.5 节。
   - 局限：只有一位人工，盲标一致率是人和子 agent 之间的；每个 split 约 100 题，区间较宽；test 上的一道试跑错题曾用于修改提示词（那道题不在金标里）。
-- 第 7 阶段（收尾）：`docker compose up --build` 一条命令启动全栈（下载并核对数据、导入、向量化、接口和网页），在干净克隆、没有 `.env` 的环境里验证过；写了[技术报告](docs/technical_report_cn.md)。
+- 第 7 阶段（收尾）：`docker compose up --build` 一条命令启动全栈（下载并核对数据、导入、向量化、接口和网页），在干净克隆、没有 `.env` 的环境里验证过（模型用的是本机已下载的缓存；Docker 里向量算得太慢，只在容器里算了前 736 个块，其余按块编号从开发库复制，再由导入步骤校验）；写了[技术报告](docs/technical_report_cn.md)。
 
 ## 本地开发
 

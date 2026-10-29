@@ -5,6 +5,7 @@ import io
 import json
 import tempfile
 import threading
+import time
 import unittest
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -80,6 +81,21 @@ class DownloadTests(unittest.TestCase):
         with self.assertRaises(DownloadError) as ctx:
             ensure_file(self.local / "missing.jsonl", url, sha(b""))
         self.assertIn(url, str(ctx.exception))
+        self.assertEqual(list(self.local.iterdir()), [])
+
+    def test_stalled_server_times_out_and_leaves_no_file(self):
+        # A hung connection must end as an error, or `docker compose up` would wait forever in ingest.
+        class Stalling(QuietHandler):
+            def do_GET(self):
+                time.sleep(1)
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Stalling)
+        threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        with self.assertRaises(DownloadError):
+            ensure_file(self.local / "p.jsonl", f"http://127.0.0.1:{server.server_address[1]}/p.jsonl", sha(b""),
+                        timeout=0.2)
         self.assertEqual(list(self.local.iterdir()), [])
 
     def test_main_fetches_both_manifest_files(self):
