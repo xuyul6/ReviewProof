@@ -122,3 +122,7 @@ REVIEWPROOF_TEST_DATABASE_URL=postgresql://reviewproof:reviewproof@localhost:543
 ## 数据来源
 
 数据来自 AmazonQA（Mansi Gupta, Nitish Kulkarni, Raghuveer Chanda, Anirudha Rayasam, Zachary C. Lipton. *AmazonQA: A Review-Based Question Answering Task*. IJCAI 2019），从官方 S3 下载：`https://amazon-qa.s3-us-west-2.amazonaws.com/val-qar_products.jsonl` 和 `val-qar.jsonl`。AmazonQA 没有声明数据许可，所以本仓库不分发数据文件或数据库快照，只保存抽样清单（商品 ASIN 和文件的 SHA-256）。评测报告和金标里有题目文本和评论摘录。评论 ID（如 `B00007E7C8-r00012`）由本系统生成，不是 Amazon 的评论 ID。
+
+## 许可
+
+代码和本项目自己写的文档采用 [MIT 许可](LICENSE)。评测报告和金标里的题目文本和评论摘录来自 AmazonQA，不在 MIT 许可范围内。
