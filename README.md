@@ -4,6 +4,41 @@
 
 - 做什么、不做什么：[项目定位](docs/product_positioning_cn.md)
 - 怎么做、分几个阶段：[改动方案](docs/roadmap_cn.md)
+- 系统和评测结果的完整说明：[技术报告](docs/technical_report_cn.md)；设计取舍和遇到的问题：[设计决策与问题复盘](docs/design_and_lessons_cn.md)
+
+## 用 Docker 一键启动
+
+只需要 Docker（Compose v2.24 以上）。在仓库根目录运行：
+
+```bash
+cp .env.example .env              # 可选：填入 ANTHROPIC_API_KEY 才能提问
+docker compose up --build
+```
+
+依次启动三个服务，完成后打开 http://127.0.0.1:8000/ ：
+
+1. `db`：PostgreSQL 16 + pgvector。
+2. `ingest`：从 AmazonQA 官方 S3 下载两份数据文件（约 1.5 GB，按 `samples/manifest_v1.json` 核对 SHA-256；`data/` 里已有就跳过），导入抽样的 100 件商品，计算 BGE-M3 向量，最后校验。可以重复运行，中断后再启动会接着算剩下的向量。
+3. `api`：等 `ingest` 成功后启动接口和网页。
+
+需要知道的：
+
+- **第一次很慢。** 镜像构建约 1 分钟（本机实测，取决于网速）。除了数据，还要下载两个模型（`BAAI/bge-m3` 和 `BAAI/bge-reranker-v2-m3`，各约 2.3 GB，存进 `reviewproof-models` 卷），并在 CPU 上计算 24,599 个评论块的向量。在 Apple 芯片的 Mac 上，Docker 里实测每分钟 85–96 块，算完要 4 个多小时，因为 Linux 虚拟机里的 PyTorch 用不上 macOS 的加速库；同一台机器上直接用本机 Python 导入约 40 分钟。所以 Mac 上建议先用本机 Python 导入，再启动全栈（见下面的命令）。其他平台的速度没有测过。
+- **之后再启动**时，`ingest` 会重新核对数据、确认向量都在（实测约 7 秒），网页约半分钟内可用。
+- **没有 API key 也能启动：** 可以浏览商品、查看评论，提问会显示"服务出错"，不会说成"评论无法确认"。
+- **速度和内存：** Docker 里每次检索（含重排）实测 11–16 秒；本机 Python 上重排约 5 秒。接口进程加载两个模型，本机实测约 2.4 GB；本机给 Docker 分配 5 GB 内存时整套运行正常。
+- **端口：** 只监听本机。网页默认 8000、数据库默认 54329，可以用 `REVIEWPROOF_API_PORT`、`REVIEWPROOF_DB_PORT` 改。
+- Linux 上 `data/` 由容器创建时属于 root。
+
+Mac 上更快的做法（需要 Python 3.10+）：
+
+```bash
+docker compose up -d db
+python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+python -m reviewproof.ingest.download --manifest samples/manifest_v1.json
+python -m reviewproof.ingest --manifest samples/manifest_v1.json    # 约 40 分钟
+docker compose up --build                                          # ingest 发现向量都在，很快结束
+```
 
 ## 当前进度
 
@@ -18,8 +53,9 @@
   - 主要错误是误拒（金标可答、系统拒答），误拒率 dev 0.143、test 0.175；是非题结论准确率只有 0.583（12 题）和 0.533（15 题）。
   - 针对误拒试过三处提示词和规则修改，dev 上没有成立：准确率仍是 0.850，只是把误拒换成了误答（回滚一处后误拒 11 → 8、误答 4 → 7）。已全部回滚，test 没有复跑。报告见 [gold-dev-r2](reports/eval/gold-dev-r2/report.md) 和 [gold-dev-r3](reports/eval/gold-dev-r3/report.md)，原因见[复盘文档](docs/design_and_lessons_cn.md) 9.5 节。
   - 局限：只有一位人工，盲标一致率是人和子 agent 之间的；每个 split 约 100 题，区间较宽；test 上的一道试跑错题曾用于修改提示词（那道题不在金标里）。
+- 第 7 阶段（收尾）：`docker compose up --build` 一条命令启动全栈（下载并核对数据、导入、向量化、接口和网页），在干净克隆、没有 `.env` 的环境里验证过；写了[技术报告](docs/technical_report_cn.md)。
 
-## 本地运行
+## 本地开发
 
 需要 Python 3.10+ 和 Docker。
 
@@ -30,9 +66,10 @@ cp .env.example .env              # 填入 ANTHROPIC_API_KEY（第 3 阶段起�
 docker compose up -d db           # 本地 Postgres 16 + pgvector，端口 54329
 ```
 
-把 AmazonQA 验证集的 `val-qar_products.jsonl` 和 `val-qar.jsonl` 下载到 `data/`，然后导入：
+下载 AmazonQA 验证集的两份文件到 `data/`（已有且 SHA-256 一致就跳过），然后导入：
 
 ```bash
+python -m reviewproof.ingest.download --manifest samples/manifest_v1.json
 python -m reviewproof.ingest --manifest samples/manifest_v1.json
 ```
 
@@ -81,3 +118,7 @@ REVIEWPROOF_TEST_DATABASE_URL=postgresql://reviewproof:reviewproof@localhost:543
 ```
 
 第一条只跑不需要数据库的测试；第二条连同数据库测试一起跑，只会清空名字以 `_test` 结尾的测试库。前端测试：`cd frontend && npm run typecheck && npm test`。
+
+## 数据来源
+
+数据来自 AmazonQA（Mansi Gupta, Nitish Kulkarni, Raghuveer Chanda, Anirudha Rayasam, Zachary C. Lipton. *AmazonQA: A Review-Based Question Answering Task*. IJCAI 2019），从官方 S3 下载：`https://amazon-qa.s3-us-west-2.amazonaws.com/val-qar_products.jsonl` 和 `val-qar.jsonl`。AmazonQA 没有声明数据许可，所以本仓库不分发数据文件或数据库快照，只保存抽样清单（商品 ASIN 和文件的 SHA-256）。评测报告和金标里有题目文本和评论摘录。评论 ID（如 `B00007E7C8-r00012`）由本系统生成，不是 Amazon 的评论 ID。
