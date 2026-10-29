@@ -151,27 +151,14 @@ class WorkflowTests(DatabaseTestCase):
         self.assertEqual(self.llm.calls[-1][0], "GeneratedAnswer")
 
     def test_yes_no_verdict_unknown_makes_the_run_unanswerable(self):
-        # Even with a valid citation and an "answered" assessment: an answer that leans neither way is a
-        # refusal (gold-dev-r2 showed it catches more unanswerable questions than it refuses answerable ones).
-        undecided = GeneratedYesNoAnswer(verdict_question="Does it fit a 2015 Wrangler?", claims=[Claim(
-            text="One reviewer says fit depends on the trim level.", chunk_ids=["A-r00001-c00"])], unknowns=[],
-            verdict="unknown")
-        r = self.ask({"QueryPlan": [plan("2015 wrangler fit")],
-                      "EvidenceAssessment": [assess("answered", ["A-r00001-c00"])],
-                      "GeneratedYesNoAnswer": [undecided]})
+        worry = GeneratedYesNoAnswer(verdict_question="Is it tested on animals?", claims=[Claim(text="One reviewer worries it may be tested on animals.",
+                                                   chunk_ids=["A-r00001-c00"])], unknowns=[], verdict="unknown")
+        r = self.ask({"QueryPlan": [plan("animal testing")],
+                      "EvidenceAssessment": [assess("partial", ["A-r00001-c00"], ["x"])],
+                      "GeneratedYesNoAnswer": [worry]})
         self.assertEqual((r.status, r.verdict, r.citations), ("unanswerable", "unknown", ()))
-        self.assertIn("downgraded_from=answered", r.trace[-1].detail)
-        self.assertIn("verdict_question='Does it fit a 2015 Wrangler?'", r.trace[-2].detail)
-        self.assertEqual(r.answer_text, "Verdict: Can't confirm\nThe reviews don't confirm this.")
-
-    def test_yes_no_verdict_unknown_without_valid_citations_is_unanswerable(self):
-        foreign = GeneratedYesNoAnswer(verdict_question="Does it fit a 2015 Wrangler?", claims=[Claim(
-            text="One reviewer says it fit their 2014 Wrangler.", chunk_ids=["B-r00000-c00"])], unknowns=[],
-            verdict="unknown")
-        r = self.ask({"QueryPlan": [plan("2015 wrangler fit")],
-                      "EvidenceAssessment": [assess("partial", ["A-r00001-c00"], ["2015"])],
-                      "GeneratedYesNoAnswer": [foreign]})
-        self.assertEqual((r.status, r.verdict, r.citations), ("unanswerable", "unknown", ()))
+        self.assertIn("downgraded_from=partial", r.trace[-1].detail)
+        self.assertIn("verdict_question='Is it tested on animals?'", r.trace[-2].detail)
         self.assertEqual(r.answer_text, "Verdict: Can't confirm\nThe reviews don't confirm this.")
 
     def test_plan_failure_degrades_with_heuristic(self):

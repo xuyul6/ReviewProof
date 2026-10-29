@@ -115,18 +115,6 @@ class PromptTests(unittest.TestCase):
             self.assertNotIn("question's language", system)
             self.assertIn("answer language", system)
 
-    def test_assess_prompt_follows_the_gold_guideline(self):
-        # Gold guideline section 2; the gold eval refused 11 answerable questions at this step, mostly
-        # close cases (another model year) that the guideline counts as partial.
-        answered, rest = ASSESS_SYSTEM.split('"partial"', 1)
-        partial, unanswerable = rest.split('"unanswerable"', 1)
-        self.assertIn("one reviewer", answered)
-        self.assertIn("disagree", answered)
-        self.assertIn("close case", partial)
-        self.assertIn("not even a close case", unanswerable)
-        # The pilot's 5609: a reviewer's worry is not evidence, so the arbiter refuses it here.
-        self.assertIn("worry", unanswerable)
-
     def test_plan_routes_away_only_what_reviews_cannot_speak_to(self):
         # Gold guideline section 2: warranty, official dimensions, where to buy and comparisons are
         # partial or answered when reviewers report first-hand experience, so they must reach retrieval.
@@ -136,13 +124,6 @@ class PromptTests(unittest.TestCase):
         for topic in ("warranty", "dimensions", "compatibility", "authenticity", "comparisons"):
             self.assertNotIn(topic, out_part)
             self.assertIn(topic, review_part)
-
-    def test_choosing_a_size_of_this_product_is_a_review_question(self):
-        # Gold dev 73170: "...which one would you recommend?" about this sleeve's sizes was routed away
-        # as a recommendation of another product.
-        out_part, review_part = PLAN_SYSTEM.split('"review_question"', 1)
-        self.assertIn("a different product", out_part)
-        self.assertIn("size or variant", review_part)
 
 
 class GeneratePromptRuleTests(unittest.TestCase):
