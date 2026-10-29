@@ -95,3 +95,10 @@
 - [ ] **Step 1:** `python -m reviewproof.eval --split test --name gold-test-r2 --labels annotations/gold_v1/labels.jsonl --systems workflow`。
 - [ ] **Step 2: 文档。** README 和 `docs/design_and_lessons_cn.md` 加上修复前后的数字（只写报告里的数字和区间，注明 test 的错例参与过分析）；复盘文档加一节"金标之后的误拒修复"；本地 CLAUDE.md 更新 `unknown` 的规则。
 - [ ] **Step 3: 提交** `docs: add refusal-fix reports and before/after numbers`
+
+## 执行结果（2026-10-29）：没有成立，全部回滚
+
+- Task 1–3 完成后 dev 复跑（`reports/eval/gold-dev-r2`）：准确率 0.850 [0.770, 0.920]，和修复前相同；误拒 11 → 4，误答 4 → 11。
+- 回滚 Task 1 后再跑 dev（`reports/eval/gold-dev-r3`）：准确率仍是 0.850 [0.770, 0.920]；误拒 8，误答 7。
+- 按用户决定停下：Task 1–3 全部回滚（`e022560`、`9535003`），工作流代码和 gold-test 测过的版本相同；Task 5 的 test 复跑没有做。
+- 原因和教训见 `docs/design_and_lessons_cn.md` 9.5 节。
