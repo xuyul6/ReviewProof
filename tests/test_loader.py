@@ -15,9 +15,9 @@ QUESTIONS = {"A": [Question(
 
 
 class LoaderTests(DatabaseTestCase):
-    def load(self, product=None, manifest=None, questions=QUESTIONS):
+    def load(self, product=None, manifest=None, questions=QUESTIONS, titles=None):
         product = product or make_product()
-        return load_dataset(self.conn, manifest or make_manifest("A"), {"A": product}, questions)
+        return load_dataset(self.conn, manifest or make_manifest("A"), {"A": product}, questions, titles)
 
     def scalar(self, sql, params=None):
         # Passing params (even empty) makes psycopg parse '%' in LIKE patterns as placeholders.
@@ -72,6 +72,12 @@ class LoaderTests(DatabaseTestCase):
         expected_tokens = sum(-(-len(t) // 4) for t in REVIEW_TEXTS)
         self.assertEqual(row, ("dev", "small", 3, 3, expected_tokens))
         self.assertEqual(self.scalar("SELECT source_sha256 FROM datasets WHERE dataset_id = 'test-dataset'"), "abc")
+
+    def test_title_stored_and_cleared_by_a_load_without_it(self):
+        self.load(titles={"A": "Koss PortaPro Headphones"})
+        self.assertEqual(self.scalar("SELECT title FROM products WHERE product_id = 'A'"), "Koss PortaPro Headphones")
+        self.load()
+        self.assertIsNone(self.scalar("SELECT title FROM products WHERE product_id = 'A'"))
 
 
 if __name__ == "__main__":
