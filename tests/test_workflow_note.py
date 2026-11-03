@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from reviewproof.ingest.embed import embed_pending_chunks
 from reviewproof.ingest.loader import load_dataset
@@ -6,6 +7,7 @@ from reviewproof.llm import LLMError
 from reviewproof.retrieval import RetrievalParams
 from reviewproof.retrieval.bm25 import BM25Cache
 from reviewproof.workflow import RetrievalDeps, answer_question
+from reviewproof.workflow import nodes as workflow_nodes
 from reviewproof.workflow.answer import Note
 from reviewproof.workflow.schemas import GeneralNote
 from tests.support import (REVIEW_TEXTS, DatabaseTestCase, FakeEmbedder, FakeLLM, FakeReranker, make_manifest,
@@ -91,6 +93,15 @@ class GeneralNoteTests(DatabaseTestCase):
         self.assertEqual((r.status, r.service_status), ("unanswerable", "ok"))
         self.assertEqual(r.answer_text, "Verdict: Can't confirm\nThe reviews don't confirm this.")
         self.assertEqual((r.trace[-1].node, r.trace[-1].status), ("advise", "failed"))
+
+    def test_unexpected_note_error_keeps_the_answer(self):
+        with patch.object(workflow_nodes, "advise_prompt", side_effect=TypeError("product row vanished")):
+            r = self.ask(self.unanswerable())
+        self.assertIsNone(r.note)
+        self.assertEqual((r.status, r.service_status), ("unanswerable", "ok"))
+        self.assertEqual(r.answer_text, "Verdict: Can't confirm\nThe reviews don't confirm this.")
+        self.assertEqual((r.trace[-1].node, r.trace[-1].status), ("advise", "failed"))
+        self.assertIn("TypeError", r.trace[-1].detail)
 
     def test_blank_note_text_is_dropped(self):
         r = self.ask(self.unanswerable(GeneralNote=[note(text="  ")]))

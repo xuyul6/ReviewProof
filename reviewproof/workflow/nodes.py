@@ -197,7 +197,7 @@ class WorkflowNodes:
                                    missing=state["unknowns"] if state["status"] == "partial" else (),
                                    out_of_scope_reason=state.get("out_of_scope_reason", "") if out_of_scope else "")
             result = self.llm.structured(system=ADVISE_SYSTEM, prompt=prompt, schema=GeneralNote)
-        except (LLMError, psycopg.Error) as exc:
+        except Exception as exc:  # LLM, database or anything else: the note is extra, the answer must stand
             self.conn.rollback()
             return {"trace": [TraceEntry("advise", "failed", f"{type(exc).__name__}: {exc}; note omitted", _ms(start))]}
         n = result.output
