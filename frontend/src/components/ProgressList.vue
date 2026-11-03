@@ -5,6 +5,7 @@ defineProps<{ progress: TraceEvent[]; running: boolean }>();
 
 const NODE_LABELS: Record<string, string> = {
   plan: "规划", retrieve: "检索", assess: "评估证据", rewrite: "改写重检索", generate: "生成回答", verify: "核验引用",
+  advise: "补充参考",
 };
 const STATUS_LABELS: Record<string, string> = { ok: "完成", degraded: "降级", failed: "失败", skipped: "跳过" };
 </script>

@@ -6,7 +6,7 @@ export function doneEvent(overrides: Partial<DoneEvent> = {}): DoneEvent {
   return {
     run_id: "r1", status: "answered", service_status: "ok", verdict: "yes", route: "review_question",
     unknowns: [], search_queries: ["loud"], retrieval_modes: ["full_context"], rewrites_used: 0, llm_calls: 3,
-    input_tokens: 100, output_tokens: 20, latency_ms: 1234, persisted: true, ...overrides,
+    input_tokens: 100, output_tokens: 20, latency_ms: 1234, note: null, persisted: true, ...overrides,
   };
 }
 
