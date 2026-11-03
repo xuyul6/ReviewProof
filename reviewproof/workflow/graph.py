@@ -1,6 +1,7 @@
 """The QA workflow as a LangGraph state graph, the only orchestration path.
 
 plan → (out of scope: finalize) → retrieve → assess → [rewrite → assess] → generate → verify → finalize
+→ [advise: a labelled general note when the reviews can't answer all of it, if enabled]
 """
 from __future__ import annotations
 
@@ -13,7 +14,7 @@ from langgraph.graph import END, START, StateGraph
 
 from reviewproof.llm import LLM
 from reviewproof.retrieval import ProductNotFoundError
-from reviewproof.workflow.answer import AnswerClaim, Citation
+from reviewproof.workflow.answer import AnswerClaim, Citation, Note
 from reviewproof.workflow.nodes import WorkflowNodes
 from reviewproof.workflow.state import QAState, RetrievalDeps, RetrievalSnapshot, TraceEntry
 
@@ -40,11 +41,12 @@ class QAResult:
     latency_ms: float
     retrievals: tuple[RetrievalSnapshot, ...] = ()
     usage: tuple[tuple[int, int], ...] = ()  # (input, output) tokens per LLM call
+    note: Note | None = None  # not from the reviews; only when advise is on
 
 
 def build_graph(nodes: WorkflowNodes):
     graph = StateGraph(QAState)
-    for name in ("plan", "retrieve", "assess", "rewrite", "generate", "verify", "finalize"):
+    for name in ("plan", "retrieve", "assess", "rewrite", "generate", "verify", "finalize", "advise"):
         graph.add_node(name, getattr(nodes, name))
     graph.add_edge(START, "plan")
     graph.add_conditional_edges("plan", nodes.after_plan, ["retrieve", "finalize"])
@@ -53,14 +55,17 @@ def build_graph(nodes: WorkflowNodes):
     graph.add_conditional_edges("rewrite", nodes.after_rewrite, ["assess", "generate", "finalize"])
     graph.add_conditional_edges("generate", nodes.after_generate, ["verify", "finalize"])
     graph.add_edge("verify", "finalize")
-    graph.add_edge("finalize", END)
+    graph.add_conditional_edges("finalize", nodes.after_finalize, ["advise", END])
+    graph.add_edge("advise", END)
     return graph.compile()
 
 
 def stream_answer(conn: psycopg.Connection, product_id: str, question: str, *, llm: LLM,
-                  retrieval: RetrievalDeps, max_rewrites: int = 1) -> Iterator[TraceEntry | QAResult]:
+                  retrieval: RetrievalDeps, max_rewrites: int = 1,
+                  advise: bool = False) -> Iterator[TraceEntry | QAResult]:
     """Yield each node's trace entry as it finishes, then the QAResult. Input is checked on the
-    first next(): an empty question raises ValueError, an unknown product ProductNotFoundError."""
+    first next(): an empty question raises ValueError, an unknown product ProductNotFoundError.
+    advise adds the general note; evaluation leaves it off."""
     if not question.strip():
         raise ValueError("question is empty")
     exists = conn.execute("SELECT 1 FROM products WHERE product_id = %s", (product_id,)).fetchone()
@@ -69,7 +74,7 @@ def stream_answer(conn: psycopg.Connection, product_id: str, question: str, *, l
         raise ProductNotFoundError(product_id)
 
     start = time.perf_counter()
-    graph = build_graph(WorkflowNodes(conn, llm, retrieval, max_rewrites))
+    graph = build_graph(WorkflowNodes(conn, llm, retrieval, max_rewrites, advise))
     state: dict = {}
     initial = {"product_id": product_id, "question": question, "rewrites_used": 0}
     for mode, chunk in graph.stream(initial, stream_mode=["updates", "values"]):
@@ -91,10 +96,12 @@ def stream_answer(conn: psycopg.Connection, product_id: str, question: str, *, l
         trace=tuple(state.get("trace", ())), llm_calls=len(usage),
         input_tokens=sum(u[0] for u in usage), output_tokens=sum(u[1] for u in usage),
         latency_ms=(time.perf_counter() - start) * 1000,
-        retrievals=tuple(state.get("retrieval_snapshots", ())), usage=tuple(tuple(u) for u in usage))
+        retrievals=tuple(state.get("retrieval_snapshots", ())), usage=tuple(tuple(u) for u in usage),
+        note=state.get("note"))
 
 
 def answer_question(conn: psycopg.Connection, product_id: str, question: str, *, llm: LLM,
-                    retrieval: RetrievalDeps, max_rewrites: int = 1) -> QAResult:
-    *_, result = stream_answer(conn, product_id, question, llm=llm, retrieval=retrieval, max_rewrites=max_rewrites)
+                    retrieval: RetrievalDeps, max_rewrites: int = 1, advise: bool = False) -> QAResult:
+    *_, result = stream_answer(conn, product_id, question, llm=llm, retrieval=retrieval, max_rewrites=max_rewrites,
+                               advise=advise)
     return result

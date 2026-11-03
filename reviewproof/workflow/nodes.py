@@ -2,7 +2,7 @@
 
 Degradation stays inside the nodes: a failed plan falls back to a heuristic; a failed retrieval,
 assessment or generation marks the run as a service failure, which is never reported as
-"the reviews don't confirm this".
+"the reviews don't confirm this". A failed general note only drops the note.
 """
 from __future__ import annotations
 
@@ -10,13 +10,15 @@ import re
 import time
 
 import psycopg
+from langgraph.graph import END
 
 from reviewproof.llm import LLM, LLMError
 from reviewproof.retrieval import retrieve
-from reviewproof.workflow.answer import final_status, render_answer, verify_claims
-from reviewproof.workflow.prompts import (ASSESS_SYSTEM, GENERATE_SYSTEM, PLAN_SYSTEM, assess_prompt,
-                                          generate_prompt, plan_prompt)
-from reviewproof.workflow.schemas import EvidenceAssessment, GeneratedAnswer, GeneratedYesNoAnswer, QueryPlan
+from reviewproof.workflow.answer import final_status, render_answer, render_note, verify_claims
+from reviewproof.workflow.prompts import (ADVISE_SYSTEM, ASSESS_SYSTEM, GENERATE_SYSTEM, PLAN_SYSTEM, advise_prompt,
+                                          assess_prompt, generate_prompt, plan_prompt)
+from reviewproof.workflow.schemas import (EvidenceAssessment, GeneralNote, GeneratedAnswer, GeneratedYesNoAnswer,
+                                          QueryPlan)
 from reviewproof.workflow.state import QAState, RetrievalDeps, RetrievalSnapshot, TraceEntry
 
 _YES_NO_EN = re.compile(r"^\s*(is|are|does|do|did|can|will|would|should|could|has|have)\b", re.IGNORECASE)
@@ -32,11 +34,13 @@ def _ms(start: float) -> float:
 
 
 class WorkflowNodes:
-    def __init__(self, conn: psycopg.Connection, llm: LLM, retrieval: RetrievalDeps, max_rewrites: int):
+    def __init__(self, conn: psycopg.Connection, llm: LLM, retrieval: RetrievalDeps, max_rewrites: int,
+                 advise: bool = False):
         self.conn = conn
         self.llm = llm
         self.retrieval = retrieval
         self.max_rewrites = max_rewrites
+        self.advise_enabled = advise
 
     # --- nodes -------------------------------------------------------------------------------
 
@@ -180,6 +184,31 @@ class WorkflowNodes:
         return {"status": status, "verdict": verdict, "claims": claims, "unknowns": unknowns,
                 "citations": state.get("citations", ()) if claims else (), "answer_text": text}
 
+    def advise(self, state: QAState) -> dict:
+        """General knowledge or where to check, apart from the answer. Sees no review text, and its
+        failure drops the note without touching the run's status or service status."""
+        start = time.perf_counter()
+        out_of_scope = state.get("route") == "out_of_scope"
+        try:
+            title, category = self.conn.execute("SELECT title, category FROM products WHERE product_id = %s",
+                                                (state["product_id"],)).fetchone()
+            self.conn.rollback()
+            prompt = advise_prompt(state["question"], title=title, category=category,
+                                   missing=state["unknowns"] if state["status"] == "partial" else (),
+                                   out_of_scope_reason=state.get("out_of_scope_reason", "") if out_of_scope else "")
+            result = self.llm.structured(system=ADVISE_SYSTEM, prompt=prompt, schema=GeneralNote)
+        except (LLMError, psycopg.Error) as exc:
+            self.conn.rollback()
+            return {"trace": [TraceEntry("advise", "failed", f"{type(exc).__name__}: {exc}; note omitted", _ms(start))]}
+        n = result.output
+        update: dict = {"usage": [(result.input_tokens, result.output_tokens)]}
+        if not n.text.strip():
+            update["trace"] = [TraceEntry("advise", "ok", "empty note dropped", _ms(start))]
+            return update
+        update.update(note=render_note(state["question"], n.kind, n.text),
+                      trace=[TraceEntry("advise", "ok", f"kind={n.kind}", _ms(start))])
+        return update
+
     # --- routing -----------------------------------------------------------------------------
 
     def after_plan(self, state: QAState) -> str:
@@ -203,6 +232,15 @@ class WorkflowNodes:
 
     def after_generate(self, state: QAState) -> str:
         return "finalize" if state.get("service_failed") else "verify"
+
+    def after_finalize(self, state: QAState) -> str:
+        if not self.advise_enabled or state.get("service_failed"):
+            return END
+        status = state["status"]
+        if (state.get("route") == "out_of_scope" or status == "unanswerable"
+                or (status == "partial" and state["unknowns"])):
+            return "advise"
+        return END
 
     # --- helpers -----------------------------------------------------------------------------
 

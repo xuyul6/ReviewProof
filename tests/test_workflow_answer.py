@@ -1,7 +1,8 @@
 import unittest
 
 from reviewproof.retrieval.types import Candidate, ChunkRow
-from reviewproof.workflow.answer import AnswerClaim, final_status, is_chinese, render_answer, verify_claims
+from reviewproof.workflow.answer import (AnswerClaim, Note, final_status, is_chinese, render_answer, render_note,
+                                         verify_claims)
 from reviewproof.workflow.prompts import (ASSESS_SYSTEM, GENERATE_SYSTEM, PLAN_SYSTEM, assess_prompt,
                                           generate_prompt, plan_prompt)
 import pydantic
@@ -155,6 +156,18 @@ class GeneratedAnswerTests(unittest.TestCase):
         self.assertNotIn("related evidence", GENERATE_SYSTEM)
         self.assertIn("worry", GENERATE_SYSTEM)
         self.assertIn("close case", GENERATE_SYSTEM)
+
+
+class RenderNoteTests(unittest.TestCase):
+    def test_headings_follow_kind_and_language(self):
+        self.assertEqual(render_note("音量可以调吗？", "general", " 一般可以。 "),
+                         Note("general", "以下不是评论内容，是这类商品的一般情况，仅供参考：", "一般可以。"))
+        self.assertEqual(render_note("音量可以调吗？", "suggestion", "问卖家。").heading,
+                         "以下不是评论内容，是可以去哪里确认的建议：")
+        self.assertEqual(render_note("Is it loud?", "general", "Usually.").heading,
+                         "Not from the reviews: what is generally true of this kind of product, for reference only.")
+        self.assertEqual(render_note("Is it loud?", "suggestion", "Ask the seller.").heading,
+                         "Not from the reviews: where you could check this.")
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from reviewproof.embedding import Embedder
 from reviewproof.retrieval.bm25 import BM25Cache
 from reviewproof.retrieval.rerank import Reranker
 from reviewproof.retrieval.types import Candidate, ChannelStatus, RetrievalParams, RetrievalResult
-from reviewproof.workflow.answer import AnswerClaim, Citation
+from reviewproof.workflow.answer import AnswerClaim, Citation, Note
 from reviewproof.workflow.schemas import EvidenceAssessment, GeneratedAnswer, GeneratedYesNoAnswer
 
 
@@ -23,7 +23,7 @@ class RetrievalDeps:
 
 @dataclass(frozen=True)
 class TraceEntry:
-    node: str  # plan / retrieve / assess / rewrite / generate / verify
+    node: str  # plan / retrieve / assess / rewrite / generate / verify / advise
     status: str  # ok / degraded / failed / skipped
     detail: str
     latency_ms: float
@@ -69,6 +69,7 @@ class QAState(TypedDict, total=False):
     status: str | None
     verdict: str | None
     answer_text: str
+    note: Note
     service_failed: bool
     degraded: bool
     retrieval_modes: Annotated[list[str], operator.add]

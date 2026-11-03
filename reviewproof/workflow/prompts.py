@@ -1,7 +1,9 @@
-"""Prompts for the three LLM steps.
+"""Prompts for the LLM steps.
 
-Only two things ever reach a prompt: the question being asked and the current product's review
-chunks. Community answers, snippets, labels and other questions from the `questions` table never do.
+Only these ever reach a prompt: the question being asked, the current product's review chunks and,
+for the general note only, the product's title and category (from Amazon metadata in `products`);
+the note prompt gets no review text. Community answers, snippets, labels and other questions from
+the `questions` table never do.
 """
 from __future__ import annotations
 
@@ -56,6 +58,26 @@ no; say in the claim that it is a close case. Use "unknown" only when the excerp
 (a reviewer's worry or guess is not evidence); the answer is then reported as not confirmed."""
 
 
+ADVISE_SYSTEM = """A pre-purchase assistant answers questions about one product from its customer reviews. The reviews \
+could not answer this question, or the parts listed. Write a short note that still helps the shopper; \
+it is shown under a heading saying it is not from the reviews.
+
+kind:
+- "general": the question (or the uncovered part) asks what is typical for this kind of product, \
+independent of this product's own model or specifications. Answer it from general knowledge, \
+phrased as what is usual for this kind of product.
+- "suggestion": the answer depends on this specific product (its model, size, specifications, \
+compatibility, warranty) or on the seller (price, stock, shipping). Say where the shopper could \
+check: the specifications on the product page, the manufacturer's manual or website, asking the \
+seller, or measuring their own setup.
+
+Rules:
+- Never state facts about this specific product or model, even ones you believe you know.
+- Do not recommend other brands or products.
+- For medical or legal questions, only suggest asking a qualified professional.
+- At most three sentences, in the answer language, with no citations or bracketed ids."""
+
+
 def _excerpts(candidates: Sequence[Candidate]) -> str:
     return "\n\n".join(f"[{c.chunk.chunk_id}] {c.chunk.text}" for c in candidates)
 
@@ -80,4 +102,15 @@ def generate_prompt(question: str, is_yes_no: bool, status: str, candidates: Seq
     if missing:
         lines.append("Not covered by the excerpts: " + "; ".join(missing))
     lines.append(f"Review excerpts:\n{_excerpts(candidates)}")
+    return "\n\n".join(lines)
+
+
+def advise_prompt(question: str, *, title: str | None, category: str, missing: Sequence[str],
+                  out_of_scope_reason: str) -> str:
+    lines = [f"Question:\n{question}", _language(question),
+             f"Product: {title or 'title unknown'} (category: {category})"]
+    if missing:
+        lines.append("The reviews did not cover: " + "; ".join(missing))
+    elif out_of_scope_reason:
+        lines.append(f"Outside what reviews can answer: {out_of_scope_reason}")
     return "\n\n".join(lines)
