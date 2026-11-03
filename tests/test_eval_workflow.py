@@ -119,6 +119,12 @@ class WorkflowEvalTests(DatabaseTestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual((rows[0]["service_status"], rows[0]["status"]), ("ok", "answered"))
 
+    def test_workflow_rows_never_call_the_note(self):
+        unanswerable = EvidenceAssessment(status="unanswerable", supporting_chunk_ids=[], missing=[], rewrite_query="")
+        rows = self.run_eval(FakeLLM(script(EvidenceAssessment=[unanswerable] * 10)), systems=("workflow",))
+        self.assertEqual([(r["status"], r.get("error")) for r in rows], [("unanswerable", None)] * 2)
+        self.assertNotIn("GeneralNote", [c[0] for c in self.llm.calls])
+
     def test_service_failure_row(self):
         rows = self.run_eval(FakeLLM(script(EvidenceAssessment=[LLMError("down")])), systems=("workflow",),
                              questions=[QUESTIONS[0]])

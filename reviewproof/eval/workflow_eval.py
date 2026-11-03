@@ -81,8 +81,9 @@ def _run_one(conn, q: EvalQuestion, system: str, llm: LLM, deps: RetrievalDeps, 
         else:
             run_deps = deps if system == "workflow" else dataclasses.replace(
                 deps, params=dataclasses.replace(deps.params, full_context_max_tokens=10**9))
+            # The general note is not evaluated: off, so cost and llm_calls stay comparable with the reports.
             r = answer_question(conn, q.product_id, q.question_text, llm=llm, retrieval=run_deps,
-                                max_rewrites=max_rewrites)
+                                max_rewrites=max_rewrites, advise=False)
             failed = r.service_status == "failed"
             row.update(status=r.status, service_status=r.service_status, route=r.route, verdict=r.verdict,
                        answered_binary=None if failed else r.status in ("answered", "partial"),

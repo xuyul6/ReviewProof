@@ -1,7 +1,8 @@
 """Server-sent events for one question.
 
 Progress events stream live, one per finished workflow node. The answer is published in chunks
-only after the workflow has verified its citations: this is not token-by-token generation.
+only after the workflow has verified its citations: this is not token-by-token generation. The
+general note, when there is one, travels in `done`, never in the answer chunks.
 The workflow runs in its own thread under the services lock and always finishes and saves its
 run, even when the client disconnects halfway.
 """
@@ -43,7 +44,7 @@ def _run_workflow(services: Services, run_id: str, product_id: str, question: st
             conn = services.connect()
             result = None
             for item in stream_answer(conn, product_id, question, llm=services.llm, retrieval=services.retrieval,
-                                      max_rewrites=services.settings.max_rewrites):
+                                      max_rewrites=services.settings.max_rewrites, advise=True):
                 if isinstance(item, TraceEntry):
                     out.put(item)
                 else:
@@ -86,5 +87,6 @@ def qa_events(services: Services, product_id: str, question: str) -> Iterator[tu
                 "route": r.route, "unknowns": list(r.unknowns), "search_queries": list(r.search_queries),
                 "retrieval_modes": list(r.retrieval_modes), "rewrites_used": r.rewrites_used,
                 "llm_calls": r.llm_calls, "input_tokens": r.input_tokens, "output_tokens": r.output_tokens,
-                "latency_ms": r.latency_ms, "persisted": item.persisted}
+                "latency_ms": r.latency_ms, "note": asdict(r.note) if r.note else None,
+                "persisted": item.persisted}
             return
