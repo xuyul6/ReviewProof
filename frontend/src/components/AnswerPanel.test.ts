@@ -29,3 +29,37 @@ describe("AnswerPanel", () => {
     expect(wrapper.emitted("cite")).toEqual([[2]]);
   });
 });
+
+describe("AnswerPanel note", () => {
+  const note = { kind: "suggestion" as const, heading: "以下不是评论内容，是可以去哪里确认的建议：", text: "可以问卖家。" };
+
+  it("renders the note below the answer", () => {
+    const wrapper = mount(AnswerPanel, {
+      props: { done: doneEvent({ status: "unanswerable", verdict: null, note }), answerText: "评论无法确认这个问题。" },
+    });
+    expect(wrapper.get('[data-test="note-heading"]').text()).toBe(note.heading);
+    expect(wrapper.get('[data-test="note-text"]').text()).toBe(note.text);
+    const html = wrapper.html();
+    expect(html.indexOf('data-test="answer"')).toBeLessThan(html.indexOf('data-test="note"'));
+  });
+
+  it("shows no note when there is none", () => {
+    const wrapper = mount(AnswerPanel, { props: { done: doneEvent(), answerText: "Loud. [1]" } });
+    expect(wrapper.find('[data-test="note"]').exists()).toBe(false);
+  });
+
+  it("keeps note text plain, without citation buttons", () => {
+    const wrapper = mount(AnswerPanel, {
+      props: { done: doneEvent({ status: "unanswerable", note: { ...note, text: "见说明书 [1]" } }), answerText: "x" },
+    });
+    expect(wrapper.get('[data-test="note"]').findAll('[data-test="cite-ref"]')).toHaveLength(0);
+    expect(wrapper.get('[data-test="note-text"]').text()).toBe("见说明书 [1]");
+  });
+
+  it("keeps the badge on the review status", () => {
+    const wrapper = mount(AnswerPanel, {
+      props: { done: doneEvent({ status: "unanswerable", note }), answerText: "评论无法确认这个问题。" },
+    });
+    expect(wrapper.get('[data-test="badge"]').text()).toBe("评论无法确认");
+  });
+});

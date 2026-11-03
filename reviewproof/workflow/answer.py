@@ -20,6 +20,8 @@ COPY = {
         "separator": "；",
         "verdict": "结论：{label}",
         "labels": {"yes": "是", "no": "否", "mixed": "评论意见不一", "unknown": "无法确认"},
+        "note_general": "以下不是评论内容，是这类商品的一般情况，仅供参考：",
+        "note_suggestion": "以下不是评论内容，是可以去哪里确认的建议：",
     },
     "en": {
         "service_failed": "A service error stopped this run; this is not a finding about the reviews.",
@@ -29,6 +31,8 @@ COPY = {
         "separator": "; ",
         "verdict": "Verdict: {label}",
         "labels": {"yes": "Yes", "no": "No", "mixed": "Reviews disagree", "unknown": "Can't confirm"},
+        "note_general": "Not from the reviews: what is generally true of this kind of product, for reference only.",
+        "note_suggestion": "Not from the reviews: where you could check this.",
     },
 }
 
@@ -45,6 +49,14 @@ class Citation:
 class AnswerClaim:
     text: str
     citation_numbers: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class Note:
+    """General knowledge or where to check, shown apart from the answer; never cited, never evaluated."""
+    kind: str  # general / suggestion
+    heading: str
+    text: str
 
 
 def is_chinese(text: str) -> bool:
@@ -80,6 +92,11 @@ def final_status(assessed: str, claims: Sequence[AnswerClaim], verdict: str | No
     """The evidence assessment decides answerability; verification can only take it down to
     unanswerable: when no cited claim survives, or when a yes/no answer leans neither way."""
     return "unanswerable" if assessed == "unanswerable" or not claims or verdict == "unknown" else assessed
+
+
+def render_note(question: str, kind: str, text: str) -> Note:
+    copy = COPY["zh" if is_chinese(question) else "en"]
+    return Note(kind, copy[f"note_{kind}"], text.strip())
 
 
 def render_answer(*, question: str, route: str, out_of_scope_reason: str, service_status: str,

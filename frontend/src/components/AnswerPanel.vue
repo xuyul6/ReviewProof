@@ -30,5 +30,9 @@ const parts = computed(() =>
         <template v-else>{{ part.text }}</template>
       </template>
     </p>
+    <aside v-if="done?.note" class="note" data-test="note">
+      <p class="note-heading" data-test="note-heading">{{ done.note.heading }}</p>
+      <p class="note-text" data-test="note-text">{{ done.note.text }}</p>
+    </aside>
   </section>
 </template>

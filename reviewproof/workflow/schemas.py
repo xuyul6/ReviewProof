@@ -39,3 +39,9 @@ class GeneratedYesNoAnswer(BaseModel):
     claims: list[Claim]
     unknowns: list[str]
     verdict: Literal["yes", "no", "mixed", "unknown"]
+
+
+class GeneralNote(BaseModel):
+    """Shown under a "not from the reviews" heading when the reviews can't answer (all or part)."""
+    kind: Literal["general", "suggestion"]  # what is typical for this kind of product / where to check
+    text: str

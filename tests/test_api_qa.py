@@ -12,7 +12,7 @@ from reviewproof.api.qa import qa_events
 from reviewproof.ingest.embed import embed_pending_chunks
 from reviewproof.ingest.loader import load_dataset
 from reviewproof.llm import LLMError
-from reviewproof.workflow.schemas import Claim, EvidenceAssessment, GeneratedAnswer, QueryPlan
+from reviewproof.workflow.schemas import Claim, EvidenceAssessment, GeneralNote, GeneratedAnswer, QueryPlan
 from reviewproof.workflow.state import TraceEntry
 from tests.support import DatabaseTestCase, FakeEmbedder, FakeLLM, make_manifest, make_product, make_test_services
 
@@ -92,6 +92,24 @@ class QaEndpointTests(DatabaseTestCase):
         self.assertEqual(events[-2][1]["citations"][0]["chunk_id"], "A-r00001-c00")
         run = client.get(f"/v1/runs/{done['run_id']}").json()
         self.assertEqual(run["answer_text"], text)
+
+    def test_unanswerable_run_streams_the_note(self):
+        unanswerable = EvidenceAssessment(status="unanswerable", supporting_chunk_ids=[], missing=[], rewrite_query="")
+        client = self.client_for(script(EvidenceAssessment=[unanswerable],
+                                        GeneralNote=[GeneralNote(kind="general", text="Usually adjustable.")]))
+        events = self.post_qa(client, "A", "Is it loud?")
+        note = {"kind": "general",
+                "heading": "Not from the reviews: what is generally true of this kind of product, for reference only.",
+                "text": "Usually adjustable."}
+        done = events[-1][1]
+        self.assertEqual((done["status"], done["note"]), ("unanswerable", note))
+        self.assertNotIn("Usually adjustable.", "".join(d["text"] for e, d in events if e == "answer_chunk"))
+        self.assertEqual([d["node"] for e, d in events if e == "progress"][-1], "advise")
+        self.assertEqual(client.get(f"/v1/runs/{done['run_id']}").json()["note"], note)
+
+    def test_answered_run_has_no_note(self):
+        events = self.post_qa(self.client_for(script()), "A", "Is it loud?")
+        self.assertIsNone(events[-1][1]["note"])
 
     def test_long_lines_are_chunked_and_reassemble(self):
         long_claim = GeneratedAnswer(claims=[Claim(text="x" * 300, chunk_ids=["A-r00001-c00"])], unknowns=[],

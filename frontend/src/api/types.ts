@@ -66,6 +66,13 @@ export interface TraceEvent {
   latency_ms: number;
 }
 
+// Not from the reviews: what is typical for this kind of product, or where to check. Never cited.
+export interface GeneralNote {
+  kind: "general" | "suggestion";
+  heading: string;
+  text: string;
+}
+
 export interface DoneEvent {
   run_id: string;
   status: AnswerStatus | null;
@@ -80,6 +87,7 @@ export interface DoneEvent {
   input_tokens: number;
   output_tokens: number;
   latency_ms: number;
+  note: GeneralNote | null;
   persisted: boolean;
 }
 

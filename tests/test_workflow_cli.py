@@ -10,7 +10,7 @@ from reviewproof.ingest.embed import embed_pending_chunks
 from reviewproof.ingest.loader import load_dataset
 from reviewproof.llm import LLMError
 from reviewproof.workflow.cli import main
-from reviewproof.workflow.schemas import Claim, EvidenceAssessment, GeneratedAnswer, QueryPlan
+from reviewproof.workflow.schemas import Claim, EvidenceAssessment, GeneralNote, GeneratedAnswer, QueryPlan
 from tests.support import (TEST_DATABASE_URL, DatabaseTestCase, FakeEmbedder, FakeLLM, FakeReranker, make_manifest,
                            make_product)
 
@@ -51,6 +51,16 @@ class WorkflowCliTests(DatabaseTestCase):
         self.assertIn("status=answered", out)
         self.assertIn("A-r00001-c00", out)
         self.assertIn("plan", out)
+
+    def test_text_output_shows_the_note(self):
+        script = answered_script()
+        script["EvidenceAssessment"] = [EvidenceAssessment(status="unanswerable", supporting_chunk_ids=[], missing=[],
+                                                           rewrite_query="")]
+        script["GeneralNote"] = [GeneralNote(kind="suggestion", text="Ask the seller.")]
+        code, out, _ = self.run_main(["--product", "A", "--question", "Is it loud?"], script)
+        self.assertEqual(code, 0)
+        self.assertIn("The reviews don't confirm this.\n\nNot from the reviews: where you could check this.\n"
+                      "Ask the seller.\n\nstatus=unanswerable", out)
 
     def test_qid_json_never_prints_community_data(self):
         code, out, _ = self.run_main(["--qid", "q1", "--json"])

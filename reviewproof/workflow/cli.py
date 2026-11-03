@@ -29,8 +29,10 @@ def default_llm(settings: Settings) -> LLM:
 
 
 def format_result(r: QAResult) -> str:
-    lines = [r.answer_text, "",
-             f"status={r.status}  service_status={r.service_status}  verdict={r.verdict}  route={r.route}"]
+    lines = [r.answer_text, ""]
+    if r.note:
+        lines += [r.note.heading, r.note.text, ""]
+    lines.append(f"status={r.status}  service_status={r.service_status}  verdict={r.verdict}  route={r.route}")
     if r.citations:
         lines += ["", "citations:"]
         for c in r.citations:
@@ -85,7 +87,7 @@ def main(
             params=RetrievalParams(full_context_max_tokens=settings.full_context_max_tokens))
         try:
             result = answer_question(conn, product_id, question, llm=(llm_factory or default_llm)(settings),
-                                     retrieval=deps, max_rewrites=settings.max_rewrites)
+                                     retrieval=deps, max_rewrites=settings.max_rewrites, advise=True)
         except ProductNotFoundError:
             print(f"product {product_id} not found", file=sys.stderr)
             return 2
